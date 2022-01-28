@@ -5,6 +5,7 @@
 // macros
 #define PI 3.14159f
 #define DEG_TO_RAD(x) (((x) * PI) / (180.0f))
+#define COUNT_EMOJIS 10
 
 // global variable declarations
 int current_emoji;
@@ -66,6 +67,9 @@ void display(void)
 	void DrawEmojiFive(void);
 	void DrawEmojiSix(void);
 	void DrawEmojiSeven(void);
+	void DrawEmojiEight(void);
+	void DrawEmojiNine(void);
+	void DrawEmojiTen(void);
 
 	// code
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -93,6 +97,15 @@ void display(void)
 	case 7:
 		DrawEmojiSeven();
 		break;
+	case 8:
+		DrawEmojiEight();
+		break;
+	case 9:
+		DrawEmojiNine();
+		break;
+	case 10:
+		DrawEmojiTen();
+		break;
 	default:
 		break;
 	}
@@ -109,7 +122,7 @@ void keyboard(unsigned char key, int x, int y)
 		glutLeaveMainLoop();
 		break;
 	case ' ':
-		if (current_emoji < 7)
+		if (current_emoji < COUNT_EMOJIS)
 			current_emoji++;
 		else
 			current_emoji = 1;
@@ -590,6 +603,227 @@ void DrawEmojiSeven(void)
 
 	glVertex3f(0.3f, 0.2f, 0.0f);
 	glVertex3f(0.2f, 0.1f, 0.0f);
+
+	glEnd();
+}
+
+void DrawEmojiEight(void)
+{
+	// variable declarations
+	float theta, x, y;
+
+	// code
+	glBegin(GL_LINES);
+
+	glColor3f(0.9f, 0.9f, 0.0f);
+	for (theta = 0.0f; theta < 360.0f; theta = theta + 0.1f)
+	{
+		x = 0.5f * cosf(DEG_TO_RAD(theta));
+		y = 0.5f * sinf(DEG_TO_RAD(theta));
+
+		glVertex3f(0.0f, 0.0f, 0.0f);
+		glVertex3f(x, y, 0.0f);
+	}
+
+	glEnd();
+
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glLineWidth(5.0f);
+	glBegin(GL_LINES);
+
+	glColor3f(0.0f, 0.0f, 0.0f);
+	for (x = -0.2f; x < 0.2f; x = x + 0.1f)
+	{
+		glVertex3f(x, -0.2f, 0.0f);
+		glVertex3f(x + 0.05f, -0.15f, 0.0f);
+
+		glVertex3f(x + 0.05f, -0.15f, 0.0f);
+		glVertex3f(x + 0.1f, -0.2f, 0.0f);
+	}
+
+	glVertex3f(-0.3f, 0.2f, 0.0f);
+	glVertex3f(-0.15f, 0.15f, 0.0f);
+
+	glVertex3f(-0.15f, 0.15f, 0.0f);
+	glVertex3f(-0.3f, 0.1f, 0.0f);
+
+	glVertex3f(0.3f, 0.2f, 0.0f);
+	glVertex3f(0.15f, 0.15f, 0.0f);
+
+	glVertex3f(0.15f, 0.15f, 0.0f);
+	glVertex3f(0.3f, 0.1f, 0.0f);
+
+	glEnd();
+}
+
+void DrawEmojiNine(void)
+{
+	// variable declarations
+	float theta, x, y;
+
+	// code
+	glBegin(GL_LINES);
+
+	glColor3f(0.9f, 0.9f, 0.0f);
+	for (theta = 0.0f; theta < 360.0f; theta = theta + 0.1f)
+	{
+		x = 0.5f * cosf(DEG_TO_RAD(theta));
+		y = 0.5f * sinf(DEG_TO_RAD(theta));
+
+		glVertex3f(0.0f, 0.0f, 0.0f);
+		glVertex3f(x, y, 0.0f);
+	}
+
+	glColor3f(0.0f, 0.0f, 0.0f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.08f * cosf(DEG_TO_RAD(theta));
+		y = 0.1f * sinf(DEG_TO_RAD(theta));
+
+		glVertex3f(-0.2f, 0.15f, 0.0f);
+		glVertex3f(-0.2f + x, 0.15f + y, 0.0f);
+
+		glVertex3f(0.2f, 0.15f, 0.0f);
+		glVertex3f(0.2f + x, 0.15f + y, 0.0f);
+	}
+
+	glColor3f(0.9f, 0.9f, 0.0f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.08f * cosf(DEG_TO_RAD(theta));
+		y = 0.1f * sinf(DEG_TO_RAD(theta));
+
+		glVertex3f(-0.2f, 0.15f, 0.0f);
+		glVertex3f(-0.2f + (x / 1.1), 0.15f + (y / 1.5f), 0.0f);
+
+		glVertex3f(0.2f, 0.15f, 0.0f);
+		glVertex3f(0.2f + (x / 1.1), 0.15f + (y / 1.5f), 0.0f);
+	}
+
+	glColor3f(1.0f, 0.01f, 0.1f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.3f * cosf(DEG_TO_RAD(1.0f * theta));
+		y = 0.3f * sinf(DEG_TO_RAD(1.0f * theta));
+
+		glVertex3f(0.0f, -0.1f, 0.0f);
+		glVertex3f(x, -0.1 - y, 0.0f);
+	}
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.3f * cosf(DEG_TO_RAD(1.0f * theta));
+		y = 0.3f * sinf(DEG_TO_RAD(1.0f * theta));
+
+		glVertex3f(0.0f, -0.1f, 0.0f);
+		glVertex3f((x / 1.05f), -0.1 - (y / 1.5f), 0.0f);
+	}
+
+	glColor3f(0.9f, 0.9f, 0.0f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.3f * cosf(DEG_TO_RAD(1.0f * theta));
+		y = 0.3f * sinf(DEG_TO_RAD(1.0f * theta));
+
+		glVertex3f(0.0f, -0.1f, 0.0f);
+		glVertex3f((x / 1.05f), -0.1 - (y / 2.5f), 0.0f);
+	}
+
+	glEnd();
+}
+
+void DrawEmojiTen(void)
+{
+	// variable declarations
+	float theta, x, y;
+
+	// code
+	glBegin(GL_LINES);
+
+	glColor3f(0.9f, 0.9f, 0.0f);
+	for (theta = 0.0f; theta < 360.0f; theta = theta + 0.1f)
+	{
+		x = 0.5f * cosf(DEG_TO_RAD(theta));
+		y = 0.5f * sinf(DEG_TO_RAD(theta));
+
+		glVertex3f(0.0f, 0.0f, 0.0f);
+		glVertex3f(x, y, 0.0f);
+	}
+
+	glColor3f(0.0f, 0.0f, 0.0f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.08f * cosf(DEG_TO_RAD(theta));
+		y = 0.1f * sinf(DEG_TO_RAD(theta));
+
+		glVertex3f(-0.2f, 0.15f, 0.0f);
+		glVertex3f(-0.2f + x, 0.15f + y, 0.0f);
+
+		glVertex3f(0.2f, 0.15f, 0.0f);
+		glVertex3f(0.2f + x, 0.15f + y, 0.0f);
+	}
+
+	glColor3f(0.9f, 0.9f, 0.0f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.08f * cosf(DEG_TO_RAD(theta));
+		y = 0.1f * sinf(DEG_TO_RAD(theta));
+
+		glVertex3f(-0.2f, 0.15f, 0.0f);
+		glVertex3f(-0.2f + (x / 1.1), 0.15f + (y / 1.5f), 0.0f);
+
+		glVertex3f(0.2f, 0.15f, 0.0f);
+		glVertex3f(0.2f + (x / 1.1), 0.15f + (y / 1.5f), 0.0f);
+	}
+
+	glColor3f(1.0f, 0.01f, 0.1f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.3f * cosf(DEG_TO_RAD(1.0f * theta));
+		y = 0.3f * sinf(DEG_TO_RAD(1.0f * theta));
+
+		glVertex3f(0.0f, -0.1f, 0.0f);
+		glVertex3f(x, -0.1 - y, 0.0f);
+	}
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.3f * cosf(DEG_TO_RAD(1.0f * theta));
+		y = 0.3f * sinf(DEG_TO_RAD(1.0f * theta));
+
+		glVertex3f(0.0f, -0.1f, 0.0f);
+		glVertex3f((x / 1.05f), -0.1 - (y / 1.5f), 0.0f);
+	}
+
+	glColor3f(0.9f, 0.9f, 0.0f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.3f * cosf(DEG_TO_RAD(1.0f * theta));
+		y = 0.3f * sinf(DEG_TO_RAD(1.0f * theta));
+
+		glVertex3f(0.0f, -0.1f, 0.0f);
+		glVertex3f((x / 1.05f), -0.1 - (y / 2.5f), 0.0f);
+	}
+
+	glColor3f(0.3f, 0.8f, 1.0f);
+	for (theta = 0.0f; theta < 180.0f; theta = theta + 0.1f)
+	{
+		x = 0.08f * cosf(DEG_TO_RAD(theta));
+		y = 0.1f * sinf(DEG_TO_RAD(theta));
+
+		glVertex3f(-0.36f, 0.25f, 0.0f);
+		glVertex3f(-0.36f - x, 0.25f - y, 0.0f);
+	}
+
+	glEnd();
+
+	glBegin(GL_TRIANGLES);
+	
+	glVertex3f(-0.36f, 0.45f, 0.0f);
+	glVertex3f(-0.44f, 0.25f, 0.0f);
+	glVertex3f(-0.28f, 0.25f, 0.0f);
 
 	glEnd();
 }
