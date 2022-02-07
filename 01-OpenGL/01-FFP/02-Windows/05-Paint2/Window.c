@@ -67,15 +67,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	RECT rc;
 	TCHAR str[] = TEXT("Hello World!!!");
+	static int iColorFlag = 0;
 
 	// code
 	switch (iMsg)
 	{
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case 27:	// esc
+			DestroyWindow(hwnd);
+			break;
+		default:
+			break;
+		}
+		break;
+	case WM_CHAR:
+		switch (wParam)
+		{
+		case 'R':
+		case 'r':
+			iColorFlag = 1;
+			InvalidateRect(hwnd, NULL, TRUE);	// generating a WM_PAINT through WM_CHAR artificially
+			break;
+		case 'G':
+		case 'g':
+			iColorFlag = 2;
+			InvalidateRect(hwnd, NULL, TRUE);
+			break;
+		case 'B':
+		case 'b':
+			iColorFlag = 3;
+			InvalidateRect(hwnd, NULL, TRUE);
+			break;
+		default:
+			iColorFlag = 0;
+			InvalidateRect(hwnd, NULL, TRUE);
+			break;
+		}
+		break;
 	case WM_PAINT:
 		GetClientRect(hwnd, &rc);
 		hdc = BeginPaint(hwnd, &ps);
 		SetBkColor(hdc, RGB(0, 0, 0));
-		SetTextColor(hdc, RGB(0, 255, 0));
+		if (iColorFlag == 1)
+			SetTextColor(hdc, RGB(255, 0, 0));
+		else if (iColorFlag == 2)
+			SetTextColor(hdc, RGB(0, 255, 0));
+		else if (iColorFlag == 3)
+			SetTextColor(hdc, RGB(0, 0, 255));
+		else
+			SetTextColor(hdc, RGB(255, 255, 255));
 		DrawText(hdc, str, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		EndPaint(hwnd, &ps);
 		break;

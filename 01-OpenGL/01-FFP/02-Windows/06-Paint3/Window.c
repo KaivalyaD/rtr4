@@ -64,20 +64,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
 	// variable declarations
 	HDC hdc;
-	PAINTSTRUCT ps;
 	RECT rc;
 	TCHAR str[] = TEXT("Hello World!!!");
 
 	// code
 	switch (iMsg)
 	{
-	case WM_PAINT:
+	case WM_LBUTTONDOWN:
 		GetClientRect(hwnd, &rc);
-		hdc = BeginPaint(hwnd, &ps);
+		hdc = GetDC(hwnd);
 		SetBkColor(hdc, RGB(0, 0, 0));
 		SetTextColor(hdc, RGB(0, 255, 0));
 		DrawText(hdc, str, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-		EndPaint(hwnd, &ps);
+		ReleaseDC(hwnd, hdc);
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);

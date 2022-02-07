@@ -4,6 +4,10 @@
 // global function declarations
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+// global function declarations
+HWND ghwnd = NULL;
+BOOL gbFullScreen = FALSE;
+
 // entry-point function
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int iCmdShow)
 {
@@ -18,7 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	wndclass.cbSize = sizeof(WNDCLASSEX);
 	wndclass.cbClsExtra = 0;
 	wndclass.cbWndExtra = 0;
-	wndclass.style = CS_HREDRAW | CS_VREDRAW;	// ask for a window class that repaints the window if it is resized horizontally OR vertically 
+	wndclass.style = CS_HREDRAW | CS_VREDRAW;
 	wndclass.hInstance = hInstance;
 	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -33,8 +37,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 
 	// create the window
 	hwnd = CreateWindow(szAppName,
-		TEXT("Kaivalya Vishwakumar Deshpande"),
-		WS_OVERLAPPED | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME,
+		TEXT("FullScreen: Kaivalya Vishwakumar Deshpande"),
+		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -43,6 +47,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 		NULL,
 		hInstance,
 		NULL);
+	ghwnd = hwnd;
 	
 	// show the window
 	ShowWindow(hwnd, iCmdShow);
@@ -62,22 +67,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 // callback function
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
-	// variable declarations
-	HDC hdc;
-	PAINTSTRUCT ps;
-	RECT rc;
-	TCHAR str[] = TEXT("Hello World!!!");
+	// function prototypes
+	void ToggleFullScreen(void);
 
 	// code
 	switch (iMsg)
 	{
-	case WM_PAINT:
-		GetClientRect(hwnd, &rc);
-		hdc = BeginPaint(hwnd, &ps);
-		SetBkColor(hdc, RGB(0, 0, 0));
-		SetTextColor(hdc, RGB(0, 255, 0));
-		DrawText(hdc, str, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-		EndPaint(hwnd, &ps);
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case 27:
+			DestroyWindow(hwnd);
+			break;
+		default:
+			break;
+		}
+		break;
+	case WM_CHAR:
+		switch (wParam)
+		{
+		case 'F':
+		case 'f':
+			ToggleFullScreen();
+			break;
+		default:
+			break;
+		}
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -87,4 +102,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return DefWindowProc(hwnd, iMsg, wParam, lParam);
+}
+
+void ToggleFullScreen(void)
+{
+	// variable declarations
+	static DWORD dwStyle;
+	static WINDOWPLACEMENT wp;
+	MONITORINFO mi;
+
+	// code
+	wp.length = sizeof(WINDOWPLACEMENT);
+
+	if (gbFullScreen == FALSE)
+	{
+		dwStyle = GetWindowLong(ghwnd, GWL_STYLE);
+		
+		if (dwStyle & WS_OVERLAPPEDWINDOW)
+		{
+			mi.cbSize = sizeof(MONITORINFO);
+
+			if (GetWindowPlacement(ghwnd, &wp) && GetMonitorInfo(MonitorFromWindow(ghwnd, MONITORINFOF_PRIMARY), &mi))
+			{
+				SetWindowLong(ghwnd, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
+				SetWindowPos(ghwnd, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top, SWP_NOZORDER | SWP_FRAMECHANGED);
+			}
+
+			ShowCursor(FALSE);
+			gbFullScreen = TRUE;
+		}
+	}
+	else
+	{
+		SetWindowLong(ghwnd, GWL_STYLE, dwStyle | WS_OVERLAPPEDWINDOW);
+		SetWindowPlacement(ghwnd, &wp);
+		SetWindowPos(ghwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+		ShowCursor(TRUE);
+		gbFullScreen = FALSE;
+	}
 }
