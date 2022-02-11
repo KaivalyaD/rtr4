@@ -1,0 +1,2 @@
+fopen_s: log file opened
+fclose: closing log file

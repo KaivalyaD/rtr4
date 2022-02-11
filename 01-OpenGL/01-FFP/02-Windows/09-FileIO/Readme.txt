@@ -1,0 +1,1 @@
+Demonstrates the basics of C File I/O helpful in places where the MessageBox() API is not supposed to be used.

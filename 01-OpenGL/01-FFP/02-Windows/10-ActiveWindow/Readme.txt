@@ -1,0 +1,1 @@
+Checks whether the window you made is active or not.
