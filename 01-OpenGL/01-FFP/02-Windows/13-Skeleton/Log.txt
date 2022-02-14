@@ -1,0 +1,7 @@
+fopen_s: log file opened successfully
+window in focus
+fullscreen mode on
+fullscreen mode off
+destroying after receiving esc
+window out of focus
+fclose: closing log file

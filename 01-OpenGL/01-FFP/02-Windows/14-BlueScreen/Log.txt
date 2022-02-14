@@ -1,0 +1,14 @@
+fopen_s: log file opened successfully
+window in focus
+created OpenGL context successfully and made it the current context
+fullscreen mode on
+fullscreen mode off
+fullscreen mode on
+fullscreen mode off
+fullscreen mode on
+fullscreen mode off
+fullscreen mode on
+destroying after receiving esc
+window out of focus
+fullscreen mode off
+fclose: closing log file
