@@ -24,6 +24,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	int initialize(void);	// declaring according to the order of use
 	void display(void);
 	void update(void);
+	void uninitialize(void);
 
 	// variable declarations
 	WNDCLASSEX wndclass;
@@ -116,6 +117,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 		}
 	}
 
+	// uninitialize
+	uninitialize();
+
 	return (int)msg.wParam;
 }
 
@@ -125,7 +129,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	// function prototypes
 	void ToggleFullScreen(void);
 	void resize(int, int);
-	void uninitialize(void);
 
 	// code
 	switch (iMsg)
@@ -139,6 +142,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		fprintf(gpLog, "window out of focus\n");
 		break;
 	case WM_ERASEBKGND:
+		// because this is still retained mode graphics, there is WM_PAINT to paint
+		// in the case of immediate mode graphics, we shall return 0 here
 		break;
 	case WM_KEYDOWN:
 		switch (wParam)
@@ -169,7 +174,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		DestroyWindow(hwnd);
 		break;
 	case WM_DESTROY:
-		uninitialize();
 		PostQuitMessage(0);
 		break;
 	default:

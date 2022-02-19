@@ -70,11 +70,10 @@
    While in WM_PAINT there is no need to explicitly state whether or not to erase background
    as PAINTSTRUCT::fErase is always true, because this is an OpenGL application and not a Win32
    application, there is no one to erase the background. OpenGL is responsible for this operation.
-
-  [Not applicable to current Windows:
-   We don't want the default window procedure to process this message because
-   we don't want the OS to erase the background after we have already processed that
-   message, which explains "return 0" instead of "break".]
+   
+   In future, we don't want the default window procedure to process this message because
+   we don't want the OS to erase the background after we have already processed it, which
+   means we return 0 instead of break-ing.
 
 10. WM_SIZE:
 	LOWORD(lParam) and HIWORD(lParam) respectively contain the new width and height of the window
