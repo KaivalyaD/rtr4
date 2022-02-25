@@ -50,7 +50,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	wndclass.cbSize = sizeof(WNDCLASSEX);
 	wndclass.cbClsExtra = 0;
 	wndclass.cbWndExtra = 0;
-	wndclass.style = CS_HREDRAW | CS_VREDRAW;
+	wndclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	wndclass.hInstance = hInstance;
 	wndclass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(MYICON));
 	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -68,9 +68,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	cyScreen = GetSystemMetrics(SM_CYSCREEN);
 
 	// create the window
-	hwnd = CreateWindow(szAppName,
-		TEXT("Kaivalya Vishwakumar Deshpande"),
-		WS_OVERLAPPED | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME,
+	hwnd = CreateWindowEx(WS_EX_APPWINDOW,
+		szAppName,
+		TEXT("Skeleton: Kaivalya Vishwakumar Deshpande"),
+		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
 		(cxScreen - WIN_WIDTH) / 2,
 		(cyScreen - WIN_HEIGHT) / 2,
 		WIN_WIDTH,

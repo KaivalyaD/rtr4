@@ -6,9 +6,11 @@
 
 // OpenGL headers
 #include<GL/gl.h>
+#include<GL/glu.h>	// graphics library utility
 
 // OpenGL libraries
 #pragma comment(lib, "OpenGL32.lib")
+#pragma comment(lib, "glu32.lib")
 
 // macros
 #define WIN_WIDTH 800
@@ -78,7 +80,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	// create the window
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW,
 		szAppName,
-		TEXT("BlueScreen: Kaivalya Vishwakumar Deshpande"),
+		TEXT("Perspective: Kaivalya Vishwakumar Deshpande"),
 		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
 		(cxScreen - WIN_WIDTH) / 2,
 		(cyScreen - WIN_HEIGHT) / 2,
@@ -121,7 +123,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	ShowWindow(hwnd, iCmdShow);
 
 	// foregrounding and focussing the window
-	SetForegroundWindow(hwnd);	// using ghwnd is obviously fine, but by common sense, ghwnd is for global use while we have hwnd locally available in WndProc and here
+	SetForegroundWindow(hwnd);	// using ghwnd is obviously fine, but by common sense ghwnd is for global use while we have hwnd locally available in WndProc and here
 	SetFocus(hwnd);
 
 	// game loop
@@ -201,7 +203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		resize(LOWORD(lParam), HIWORD(lParam));
 		break;
-	case WM_CLOSE:	// processed after the X button is pressed and before WM_DESTROY is processed
+	case WM_CLOSE:	// disciplined code: sent as a signal that a window or an application should terminate
 		DestroyWindow(hwnd);
 		break;
 	case WM_DESTROY:
@@ -261,6 +263,7 @@ void ToggleFullScreen(void)
 int initialize(void)
 {
 	// function prototypes
+	void resize(int, int);
 
 	// variable declarations
 	PIXELFORMATDESCRIPTOR pfd;
@@ -268,7 +271,7 @@ int initialize(void)
 
 	// code
 	// initialize PIXELFORMATDESCRIPTOR
-	ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR)); // memset((void *)&pfd, NULL, sizeof(PIXELFORMATDESCRIPTOR));
+	ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -301,8 +304,11 @@ int initialize(void)
 		return -4;
 
 	// here starts the OpenGL code
-	// clear the screen using blue colour
-	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	// clear the screen using black colour
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+	// warm-up resize call
+	resize(WIN_WIDTH, WIN_HEIGHT);
 
 	return 0;
 }
@@ -314,12 +320,35 @@ void resize(int width, int height)
 		height = 1;	// to prevent a divide by zero when calculating the width/height ratio
 
 	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
+
+	glMatrixMode(GL_PROJECTION); // show a projection
+	glLoadIdentity();
+
+	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
 }
 
 void display(void)
 {
 	// code
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glTranslatef(0.0f, 0.0f, -3.0f);
+
+	glBegin(GL_TRIANGLES);
+		
+		glColor3f(1.0f, 0.0f, 0.0f);
+		glVertex3f(0.0f, 1.0f, 0.0f);
+
+		glColor3f(0.0f, 1.0f, 0.0f);
+		glVertex3f(-1.0f, -1.0f, 0.0f);
+		
+		glColor3f(0.0f, 0.0f, 1.0f);
+		glVertex3f(1.0f, -1.0f, 0.0f);
+	
+	glEnd();
 
 	SwapBuffers(ghdc);
 }
