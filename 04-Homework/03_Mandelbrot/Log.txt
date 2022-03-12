@@ -2,12 +2,6 @@ fopen(): successfully opened log file
 WndProc() [WM_SETFOCUS]: window in focus
 initialize(): created OpenGL context and made it current
 ToggleFullScreen(): entered fullscreen mode
-WndProc() [WM_KILLFOCUS]: window out of focus
-WndProc() [WM_SETFOCUS]: window in focus
-WndProc() [WM_KILLFOCUS]: window out of focus
-WndProc() [WM_SETFOCUS]: window in focus
-WndProc() [WM_KILLFOCUS]: window out of focus
-WndProc() [WM_SETFOCUS]: window in focus
 WndProc() [WM_KEYDOWN]:destroying after receiving esc
 ToggleFullScreen(): entered restored mode
 WndProc() [WM_KILLFOCUS]: window out of focus
