@@ -1,0 +1,30 @@
+fopen_s: log file opened successfully
+window in focus
+created OpenGL context successfully and made it the current context
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+destroying after receiving esc
+window out of focus
+fclose: closing log file
