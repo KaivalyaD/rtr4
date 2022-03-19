@@ -27,9 +27,6 @@ HGLRC ghrc = NULL;
 BOOL gbFullScreen = FALSE;
 BOOL gbActiveWindow = FALSE;
 
-// rendering globals
-float angleCube = 0.0f;
-
 // entry-point function
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int iCmdShow)
 {
@@ -83,7 +80,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	// create the window
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW,
 		szAppName,
-		TEXT("Going 3D: Kaivalya Vishwakumar Deshpande"),
+		TEXT("Multiple Viewports: Kaivalya Vishwakumar Deshpande"),
 		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
 		(cxScreen - WIN_WIDTH) / 2,
 		(cyScreen - WIN_HEIGHT) / 2,
@@ -168,6 +165,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	void ToggleFullScreen(void);
 	void resize(int, int);
 
+	// variable declarations
+	static GLsizei width, height;
+
 	// code
 	switch (iMsg)
 	{
@@ -199,12 +199,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		case 'f':
 			ToggleFullScreen();
 			break;
+		case '0':
+			glViewport(0, 0, width, height);
+			break;
+		case '1':
+			glViewport(0, 0, width / 2, height / 2);
+			break;
+		case '2':
+			glViewport(width / 2, 0, width / 2, height / 2);
+			break;
+		case '3':
+			glViewport(width / 2, height / 2, width / 2, height / 2);
+			break;
+		case '4':
+			glViewport(0, height / 2, width / 2, height / 2);
+			break;
+		case '5':
+			glViewport(0, 0, width, height / 2);
+			break;
+		case '6':
+			glViewport(0, height / 2, width, height / 2);
+			break;
+		case '7':
+			glViewport(0, 0, width / 2, height);
+			break;
+		case '8':
+			glViewport(width / 2, 0, width / 2, height);
+			break;
+		case '9':
+			glViewport(width / 4, height / 4, width / 2, height / 2);
+			break;
 		default:
+			glViewport(0, 0, width, height);
 			break;
 		}
 		break;
 	case WM_SIZE:
-		resize(LOWORD(lParam), HIWORD(lParam));
+		width = LOWORD(lParam);
+		height = HIWORD(lParam);
+		resize(width, height);
 		break;
 	case WM_CLOSE:	// disciplined code: sent as a signal that a window or an application should terminate
 		DestroyWindow(hwnd);
@@ -284,7 +317,6 @@ int initialize(void)
 	pfd.cGreenBits = 8;	// G
 	pfd.cBlueBits = 8;	// B
 	pfd.cAlphaBits = 8;	// A
-	pfd.cDepthBits = 32;	// 24 is another option
 
 	// get DC
 	ghdc = GetDC(ghwnd);
@@ -311,13 +343,6 @@ int initialize(void)
 	// clear the screen using black colour
 	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 
-	// changes concerning depth
-	glClearDepth(1.0f);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glShadeModel(GL_SMOOTH);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
 	// warm-up resize call
 	resize(WIN_WIDTH, WIN_HEIGHT);
 
@@ -340,62 +365,18 @@ void resize(int width, int height)
 
 void display(void)
 {
-	/*
-	 * right of the origin => positive X
-	 * left of the origin => negative X
-	 * 
-	 * over the origin => positive Y
-	 * under the origin => negative Y
-	 * 
-	 * out of the screen => positive Z
-	 * into the screen => negative Z
-	 */
-
 	// code
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
 
 	glLoadIdentity();
-	glTranslatef(0.0f, 0.0f, -5.0f);
-	glRotatef(angleCube, 1.0f, 1.0f, 1.0f);	// triaxial, or crazy!!!
-	glBegin(GL_QUADS);
+	glTranslatef(0.0f, 0.0f, -6.0f);
+	glBegin(GL_TRIANGLES);
 	{
-		// front face
-		glVertex3f(1.0f, 1.0f, 1.0f);
-		glVertex3f(-1.0f, 1.0f, 1.0f);
-		glVertex3f(-1.0f, -1.0f, 1.0f);
-		glVertex3f(1.0f, -1.0f, 1.0f);
-
-		// right face
-		glVertex3f(1.0f, 1.0f, -1.0f);
-		glVertex3f(1.0f, 1.0f, 1.0f);
-		glVertex3f(1.0f, -1.0f, 1.0f);
-		glVertex3f(1.0f, -1.0f, -1.0f);
-
-		// rear face
-		glVertex3f(-1.0f, 1.0f, -1.0f);
-		glVertex3f(1.0f, 1.0f, -1.0f);
-		glVertex3f(1.0f, -1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, -1.0f);
-
-		// left face
-		glVertex3f(-1.0f, 1.0f, 1.0f);
-		glVertex3f(-1.0f, 1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, 1.0f);
-
-		// top face
-		glVertex3f(1.0f, 1.0f, -1.0f);
-		glVertex3f(-1.0f, 1.0f, -1.0f);
-		glVertex3f(-1.0f, 1.0f, 1.0f);
-		glVertex3f(1.0f, 1.0f, 1.0f);
-
-		// bottom face
-		glVertex3f(1.0f, -1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, 1.0f);
-		glVertex3f(1.0f, -1.0f, 1.0f);
+		glVertex3f(0.0f, 1.0f, 0.0f);
+		glVertex3f(-1.0f, -1.0f, 0.0f);
+		glVertex3f(1.0f, -1.0f, 0.0f);
 	}
 	glEnd();
 
@@ -405,9 +386,6 @@ void display(void)
 void update(void)
 {
 	// code
-	angleCube = angleCube + 0.1f;
-	if (angleCube >= 360.0f)
-		angleCube = angleCube - 360.0f;
 }
 
 void uninitialize(void)

@@ -358,7 +358,6 @@ void display(void)
 
 	glLoadIdentity();
 	glTranslatef(0.0f, 0.0f, -6.0f);
-	glScalef(0.75f, 0.75f, 0.75f);
 	glRotatef(angleCube, 1.0f, 1.0f, 1.0f);	// triaxial, or crazy!!!
 	glBegin(GL_QUADS);
 	{
