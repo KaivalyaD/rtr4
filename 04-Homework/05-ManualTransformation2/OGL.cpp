@@ -4,10 +4,6 @@
 #include<stdio.h>	// for file I/O functions
 #include"OGL.h"
 
-// math headers
-#define _USE_MATH_DEFINES 1
-#include<math.h>	// for PI and trigonometeric functions
-
 // OpenGL headers
 #include<GL/gl.h>
 #include<GL/glu.h>	// graphics library utility
@@ -31,16 +27,9 @@ HGLRC ghrc = NULL;
 BOOL gbFullScreen = FALSE;
 BOOL gbActiveWindow = FALSE;
 
-// rendering globals
-float angleCube = 0.0f;
-
 // math
 GLfloat identityMatrix[16];
 GLfloat translationMatrix[16];
-GLfloat scaleMatrix[16];
-GLfloat rotationMatrix_X[16];
-GLfloat rotationMatrix_Y[16];
-GLfloat rotationMatrix_Z[16];
 GLfloat orthoTransformationMatrix[16];
 
 // entry-point function
@@ -96,7 +85,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	// create the window
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW,
 		szAppName,
-		TEXT("Manual Transformations: Kaivalya Vishwakumar Deshpande"),
+		TEXT("Manual Ortho: Kaivalya Vishwakumar Deshpande"),
 		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
 		(cxScreen - WIN_WIDTH) / 2,
 		(cyScreen - WIN_HEIGHT) / 2,
@@ -107,7 +96,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 		hInstance,
 		NULL);
 	ghwnd = hwnd;
-	
+
 	// initialize
 	iRetVal = initialize();
 	if (iRetVal == -1)
@@ -297,7 +286,6 @@ int initialize(void)
 	pfd.cGreenBits = 8;	// G
 	pfd.cBlueBits = 8;	// B
 	pfd.cAlphaBits = 8;	// A
-	pfd.cDepthBits = 32;	// 24 is another option
 
 	// get DC
 	ghdc = GetDC(ghwnd);
@@ -324,15 +312,7 @@ int initialize(void)
 	// clear the screen using black colour
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-	// changes concerning depth
-	glClearDepth(1.0f);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glShadeModel(GL_SMOOTH);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
-	// initialize the unchanging matrix arrays
-	// OpenGL matrices are column major
+	// initializing matrices
 	identityMatrix[0] = 1.0f;
 	identityMatrix[1] = 0.0f;
 	identityMatrix[2] = 0.0f;
@@ -367,23 +347,6 @@ int initialize(void)
 	translationMatrix[14] = -5.0f;	// tz = -5
 	translationMatrix[15] = 1.0f;
 
-	scaleMatrix[0] = 0.75f;	// sx = 75%
-	scaleMatrix[1] = 0.0f;
-	scaleMatrix[2] = 0.0f;
-	scaleMatrix[3] = 0.0f;
-	scaleMatrix[4] = 0.0f;
-	scaleMatrix[5] = 0.75f;	// sy = 75%
-	scaleMatrix[6] = 0.0f;
-	scaleMatrix[7] = 0.0f;
-	scaleMatrix[8] = 0.0f;
-	scaleMatrix[9] = 0.0f;
-	scaleMatrix[10] = 0.75f; // sz = 75%
-	scaleMatrix[11] = 0.0f;
-	scaleMatrix[12] = 0.0f;
-	scaleMatrix[13] = 0.0f;
-	scaleMatrix[14] = 0.0f;
-	scaleMatrix[15] = 1.0f;
-
 	// warm-up resize call
 	resize(WIN_WIDTH, WIN_HEIGHT);
 
@@ -403,23 +366,23 @@ void resize(int width, int height)
 
 	if (width >= height)
 	{
-		l = -5.0f;
-		r = 5.0f;
-		b = -5.0f * ((GLfloat)height / (GLfloat)width);
-		t = 5.0f * ((GLfloat)height / (GLfloat)width);
-		n = 5.0f;
-		f = -5.0f;
+		l = -100.0f;
+		r = 100.0f;
+		b = -100.0f * ((GLfloat)height / (GLfloat)width);
+		t = 100.0f * ((GLfloat)height / (GLfloat)width);
+		n = 100.0f;
+		f = -100.0f;
 	}
 	else
 	{
-		l = -5.0f * ((GLfloat)width / (GLfloat)height);
-		r = 5.0f * ((GLfloat)width / (GLfloat)height);
-		b = -5.0f;
-		t = 5.0f;
-		n = 5.0f;
-		f = -5.0f;
+		l = -100.0f * ((GLfloat)width / (GLfloat)height);
+		r = 100.0f * ((GLfloat)width / (GLfloat)height);
+		b = -100.0f;
+		t = 100.0f;
+		n = 100.0f;
+		f = -100.0f;
 	}
-	
+
 	orthoTransformationMatrix[0] = 2.0f / (GLfloat)(r - l);
 	orthoTransformationMatrix[1] = 0.0f;
 	orthoTransformationMatrix[2] = 0.0f;
@@ -430,12 +393,15 @@ void resize(int width, int height)
 	orthoTransformationMatrix[7] = 0.0f;
 	orthoTransformationMatrix[8] = 0.0f;
 	orthoTransformationMatrix[9] = 0.0f;
-	orthoTransformationMatrix[10] = 2.0f / (GLfloat)(f - n);
+	orthoTransformationMatrix[10] = -2.0f / (GLfloat)(f - n);
 	orthoTransformationMatrix[11] = 0.0f;
 	orthoTransformationMatrix[12] = (GLfloat)(r + l) / (GLfloat)(r - l);
 	orthoTransformationMatrix[13] = (GLfloat)(t + b) / (GLfloat)(t - b);
 	orthoTransformationMatrix[14] = (GLfloat)(f + n) / (GLfloat)(f - n);
 	orthoTransformationMatrix[15] = 1.0f;
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(identityMatrix);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(identityMatrix);
@@ -445,125 +411,21 @@ void resize(int width, int height)
 void display(void)
 {
 	// code
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
-	
-	glLoadMatrixf(identityMatrix);	// glLoadIdentity();
-	glMultMatrixf(translationMatrix);	// glTranslatef(0.0f, 0.0f, -5.0f);
-	glMultMatrixf(scaleMatrix);	// glScalef(0.75f, 0.75f, 0.75f);
-	
-	// converting degrees to radians
-	float angle = angleCube * (M_PI / 180.0f);
+	glLoadMatrixf(identityMatrix);
 
-	// about X
-	rotationMatrix_X[0] = 1.0f;
-	rotationMatrix_X[1] = 0.0f;
-	rotationMatrix_X[2] = 0.0f;
-	rotationMatrix_X[3] = 0.0f;
-	rotationMatrix_X[4] = 0.0f;
-	rotationMatrix_X[5] = cos(angle);
-	rotationMatrix_X[6] = sin(angle);
-	rotationMatrix_X[7] = 0.0f;
-	rotationMatrix_X[8] = 0.0f;
-	rotationMatrix_X[9] = -sin(angle);
-	rotationMatrix_X[10] = cos(angle);
-	rotationMatrix_X[11] = 0.0f;
-	rotationMatrix_X[12] = 0.0f;
-	rotationMatrix_X[13] = 0.0f;
-	rotationMatrix_X[14] = 0.0f;
-	rotationMatrix_X[15] = 1.0f;
+	glMultMatrixf(translationMatrix);
 
-	// about Y
-	rotationMatrix_Y[0] = cos(angle);
-	rotationMatrix_Y[1] = 0.0f;
-	rotationMatrix_Y[2] = -sin(angle);
-	rotationMatrix_Y[3] = 0.0f;
-	rotationMatrix_Y[4] = 0.0f;
-	rotationMatrix_Y[5] = 1.0f;
-	rotationMatrix_Y[6] = 0.0f;
-	rotationMatrix_Y[7] = 0.0f;
-	rotationMatrix_Y[8] = sin(angle);
-	rotationMatrix_Y[9] = 0.0f;
-	rotationMatrix_Y[10] = cos(angle);
-	rotationMatrix_Y[11] = 0.0f;
-	rotationMatrix_Y[12] = 0.0f;
-	rotationMatrix_Y[13] = 0.0f;
-	rotationMatrix_Y[14] = 0.0f;
-	rotationMatrix_Y[15] = 1.0f;
-
-	// about Z
-	rotationMatrix_Z[0] = cos(angle);
-	rotationMatrix_Z[1] = sin(angle);
-	rotationMatrix_Z[2] = 0.0f;
-	rotationMatrix_Z[3] = 0.0f;
-	rotationMatrix_Z[4] = -sin(angle);
-	rotationMatrix_Z[5] = cos(angle);
-	rotationMatrix_Z[6] = 0.0f;
-	rotationMatrix_Z[7] = 0.0f;
-	rotationMatrix_Z[8] = 0.0f;
-	rotationMatrix_Z[9] = 0.0f;
-	rotationMatrix_Z[10] = 1.0f;
-	rotationMatrix_Z[11] = 0.0f;
-	rotationMatrix_Z[12] = 0.0f;
-	rotationMatrix_Z[13] = 0.0f;
-	rotationMatrix_Z[14] = 0.0f;
-	rotationMatrix_Z[15] = 1.0f;
-
-	// glRotatef(angleCube, 1.0f, 1.0f, 1.0f);
-	glMultMatrixf(rotationMatrix_X);
-	glMultMatrixf(rotationMatrix_Y);
-	glMultMatrixf(rotationMatrix_Z);
-
-	glBegin(GL_QUADS);
+	glBegin(GL_TRIANGLES);
 	{
-		// front face
 		glColor3f(1.0f, 0.0f, 0.0f);
-
-		glVertex3f(1.0f, 1.0f, 1.0f);
-		glVertex3f(-1.0f, 1.0f, 1.0f);
-		glVertex3f(-1.0f, -1.0f, 1.0f);
-		glVertex3f(1.0f, -1.0f, 1.0f);
-
-		// right face
+		glVertex3f(0.0f, 50.0f, 0.0f);
 		glColor3f(0.0f, 1.0f, 0.0f);
-
-		glVertex3f(1.0f, 1.0f, -1.0f);
-		glVertex3f(1.0f, 1.0f, 1.0f);
-		glVertex3f(1.0f, -1.0f, 1.0f);
-		glVertex3f(1.0f, -1.0f, -1.0f);
-
-		// rear face
+		glVertex3f(-50.0f, -50.0f, 0.0f);
 		glColor3f(0.0f, 0.0f, 1.0f);
-
-		glVertex3f(-1.0f, 1.0f, -1.0f);
-		glVertex3f(1.0f, 1.0f, -1.0f);
-		glVertex3f(1.0f, -1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, -1.0f);
-
-		// left face
-		glColor3f(0.0f, 1.0f, 1.0f);
-
-		glVertex3f(-1.0f, 1.0f, 1.0f);
-		glVertex3f(-1.0f, 1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, 1.0f);
-
-		// top face
-		glColor3f(1.0f, 0.0f, 1.0f);
-
-		glVertex3f(1.0f, 1.0f, -1.0f);
-		glVertex3f(-1.0f, 1.0f, -1.0f);
-		glVertex3f(-1.0f, 1.0f, 1.0f);
-		glVertex3f(1.0f, 1.0f, 1.0f);
-
-		// bottom face
-		glColor3f(1.0f, 1.0f, 0.0f);
-
-		glVertex3f(1.0f, -1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, -1.0f);
-		glVertex3f(-1.0f, -1.0f, 1.0f);
-		glVertex3f(1.0f, -1.0f, 1.0f);
+		glVertex3f(50.0f, -50.0f, 0.0f);
 	}
 	glEnd();
 
@@ -573,9 +435,6 @@ void display(void)
 void update(void)
 {
 	// code
-	angleCube = angleCube + 0.05f;
-	if (angleCube >= 360.0f)
-		angleCube = angleCube - 360.0f;
 }
 
 void uninitialize(void)
