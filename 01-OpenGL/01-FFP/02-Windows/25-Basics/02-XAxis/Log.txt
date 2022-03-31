@@ -1,0 +1,12 @@
+fopen(): successfully created the log file
+window in focus
+OpenGL initialized successfully
+window out of focus
+window in focus
+window out of focus
+window in focus
+window out of focus
+window in focus
+destroying after receiving esc
+window out of focus
+fclose(): closing the log file
