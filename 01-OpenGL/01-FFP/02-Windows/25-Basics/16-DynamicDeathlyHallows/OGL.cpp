@@ -503,24 +503,22 @@ void update(void)
 	else
 	{
 		diffAngleCloakOfInvisibility = fabs(360.0f - angleCloakOfInvisibility);
-
-		if(angleCloakOfInvisibility < 360.0f)
-			angleCloakOfInvisibility = angleCloakOfInvisibility + (diffAngleCloakOfInvisibility / 1000.0f);
-		else if (angleCloakOfInvisibility > 360.0f)
-			angleCloakOfInvisibility = angleCloakOfInvisibility - (diffAngleCloakOfInvisibility / 1000.0f);
-
-		if (diffAngleCloakOfInvisibility < 0.001f)
-			diffAngleCloakOfInvisibility = 0.0f;
+		if (diffAngleCloakOfInvisibility > 0.001f)
+		{
+			if (angleCloakOfInvisibility < 360.0f)
+				angleCloakOfInvisibility = angleCloakOfInvisibility + (diffAngleCloakOfInvisibility / 1000.0f);
+			else
+				angleCloakOfInvisibility = angleCloakOfInvisibility - (diffAngleCloakOfInvisibility / 1000.0f);
+		}
 
 		diffAngleResurrectionStone = fabs(360.0f - angleResurrectionStone);
-		
-		if (angleResurrectionStone < 360.0f)
-			angleResurrectionStone = angleResurrectionStone + (diffAngleResurrectionStone / 1000.0f);
-		else if (angleResurrectionStone > 360.0f)
-			angleResurrectionStone = angleResurrectionStone - (diffAngleResurrectionStone / 1000.0f);
-
-		if (diffAngleResurrectionStone < 0.001f)
-			diffAngleResurrectionStone = 0.0f;
+		if (diffAngleResurrectionStone > 0.001f)
+		{
+			if (angleResurrectionStone < 360.0f)
+				angleResurrectionStone = angleResurrectionStone + (diffAngleResurrectionStone / 1000.0f);
+			else
+				angleResurrectionStone = angleResurrectionStone - (diffAngleResurrectionStone / 1000.0f);
+		}
 	}
 
 	if (countRotationsCloakOfInvisibility < 3)
