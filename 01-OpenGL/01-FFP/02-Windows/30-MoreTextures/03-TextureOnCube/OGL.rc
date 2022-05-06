@@ -1,0 +1,4 @@
+#include "OGL.h"
+
+MYICON ICON ".\\resources\\Namasakaram.ico"
+IDBITMAP_KUNDALI BITMAP ".\\resources\\Vijay_Kundali.bmp"
