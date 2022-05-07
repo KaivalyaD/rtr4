@@ -1,0 +1,4 @@
+#include "OGL.h"
+
+MYICON ICON ".\\resources\\Namasakaram.ico"
+IDSOUND_SONE_KI_CHIDIYA WAVE ".\\resources\\JahaDaalDaalParSoneKiChidiya.wav"
