@@ -655,10 +655,10 @@ void update(void)
 			state++;
 			canProceed = false;
 			
-			Sleep(1500);
+			Sleep(1000);
 			break;
 		}
-		xLetter = xLetter + 0.00025f;
+		xLetter = xLetter + 0.004f;
 		break;
 
 	case 2:
@@ -667,10 +667,10 @@ void update(void)
 			state++;
 			canProceed = false;
 			
-			Sleep(1500);
+			Sleep(1000);
 			break;
 		}
-		yLetter = yLetter - 0.00025f;
+		yLetter = yLetter - 0.004f;
 		break;
 
 	case 3:
@@ -682,9 +682,9 @@ void update(void)
 			state++;
 			canProceed = false;
 
-			Sleep(1500);
+			Sleep(1000);
 		}
-		fadeFactorD = fadeFactorD + 0.00025f;
+		fadeFactorD = fadeFactorD + 0.004f;
 		break;
 
 	case 4:
@@ -695,10 +695,10 @@ void update(void)
 			state++;
 			canProceed = false;
 
-			Sleep(1500);
+			Sleep(1000);
 			break;
 		}
-		yLetter = yLetter + 0.00025f;
+		yLetter = yLetter + 0.004f;
 		break;
 
 	case 5:
@@ -707,10 +707,10 @@ void update(void)
 			state++;
 			canProceed = false;
 
-			Sleep(1500);
+			Sleep(1000);
 			break;
 		}
-		xLetter = xLetter - 0.00025f;
+		xLetter = xLetter - 0.004f;
 		break;
 
 	case 6:
@@ -727,9 +727,9 @@ void update(void)
 			
 			break;
 		}
-		revolutionAngleJetOne = revolutionAngleJetOne + 0.01f;
-		xJetTwo = xJetTwo + 0.000066f;
-		revolutionAngleJetThree = revolutionAngleJetThree - 0.01f;
+		revolutionAngleJetOne = revolutionAngleJetOne + 0.1f;
+		xJetTwo = xJetTwo + 0.00066f;
+		revolutionAngleJetThree = revolutionAngleJetThree - 0.1f;
 		break;
 
 	case 8:
@@ -740,9 +740,9 @@ void update(void)
 
 			break;
 		}
-		xJetOne = xJetOne + 0.00016f;
-		xJetTwo = xJetTwo + 0.00018f;
-		xJetThree = xJetThree + 0.00020f;
+		xJetOne = xJetOne + 0.0016f;
+		xJetTwo = xJetTwo + 0.0018f;
+		xJetThree = xJetThree + 0.0020f;
 		break;
 
 	case 9:
@@ -753,9 +753,9 @@ void update(void)
 
 			break;
 		}
-		revolutionAngleJetOne = revolutionAngleJetOne + 0.01f;
-		xJetTwo = xJetTwo + 0.00016f;
-		revolutionAngleJetThree = revolutionAngleJetThree - 0.01f;
+		revolutionAngleJetOne = revolutionAngleJetOne + 0.1f;
+		xJetTwo = xJetTwo + 0.0016f;
+		revolutionAngleJetThree = revolutionAngleJetThree - 0.1f;
 		break;
 
 	default:
