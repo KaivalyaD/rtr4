@@ -32,11 +32,12 @@ BOOL gbActiveWindow = FALSE;
 // for the scene
 int rotEarth = 0, revEarth = 0, rotMoon = 0, revMoon = 0;
 GLUquadric *quadric = NULL;
-GLuint textures[TEX_COUNT][2] = {
-	/* Texture ID */	/* Resource ID */
-			0,			IDBITMAP_SUN,
-			0,			IDBITMAP_EARTH,
-			0,			IDBITMAP_MOON
+GLuint textures[2][TEX_COUNT] = {
+	/* Texture IDs */
+	{ 0, 0, 0 },
+
+	/* Resource IDs */
+	{ IDBITMAP_SUN, IDBITMAP_EARTH, IDBITMAP_MOON }
 };
 
 // entry-point function
@@ -92,7 +93,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	// create the window
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW,
 		szAppName,
-		TEXT("Solar System from the Red Book: Kaivalya Vishwakumar Deshpande"),
+		TEXT("A Better Solar System: Kaivalya Vishwakumar Deshpande"),
 		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
 		(cxScreen - WIN_WIDTH) / 2,
 		(cyScreen - WIN_HEIGHT) / 2,
@@ -124,6 +125,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	else if (iRetVal == -4)
 	{
 		fprintf(gpLog, "wglMakeCurrent(): failed\n");
+		uninitialize();
+	}
+	else if (iRetVal == -5)
+	{
+		fprintf(gpLog, "failed to load image as texture for the Sun\n");
+		uninitialize();
+	}
+	else if (iRetVal == -6)
+	{
+		fprintf(gpLog, "failed to load image as texture for the Earth\n");
+		uninitialize();
+	}
+	else if (iRetVal == -7)
+	{
+		fprintf(gpLog, "failed to load image as texture for the Moon\n");
 		uninitialize();
 	}
 	else
@@ -358,15 +374,15 @@ int initialize(void)
 	quadric = gluNewQuadric();
 
 	// loading texture data
-	glGenTextures(TEX_COUNT, textures);
+	glGenTextures(TEX_COUNT, textures[0]);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	for (int i = 0; i < TEX_COUNT; i++)
 	{
-		hbitmap = (HBITMAP)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(textures[i][1]), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+		hbitmap = (HBITMAP)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(textures[1][i]), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 		if (hbitmap)
 		{
 			GetObject(hbitmap, sizeof(BITMAP), &bitmap);
-			glBindTexture(GL_TEXTURE_2D, textures[i][0]);
+			glBindTexture(GL_TEXTURE_2D, textures[0][i]);
 			{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -412,17 +428,20 @@ void display(void)
 	
 	// camera tranformation
 	gluLookAt(
-		0.0f, 0.0f, 5.0f,
+		0.0f, 0.0f, 3.0f,
 		0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f
 	);
 
+	gluQuadricDrawStyle(quadric, GLU_FILL);
+	gluQuadricTexture(quadric, GL_TRUE);
+	gluQuadricNormals(quadric, GLU_SMOOTH);
+
 	glPushMatrix();
 	{
 		/* drawing the Sun */
-		glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glColor3f(1.0f, 1.0f, 0.0f);
+		glRotatef(270.0f, 1.0f, 0.0f, 0.0f);	// 90deg + 180deg for correct up-side tex coord generation
+		glBindTexture(GL_TEXTURE_2D, textures[0][0]);
 		gluSphere(quadric, 0.75, 30, 30);
 	}
 	glPopMatrix();
@@ -437,18 +456,18 @@ void display(void)
 			/* drawing the Moon */
 			glRotatef((GLfloat)revMoon, 0.0f, 1.0f, 0.0f);
 			glTranslatef(0.5f, 0.0f, 0.0f);
-			glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+			glRotatef(270.0f, 1.0f, 0.0f, 0.0f);
 			glRotatef((GLfloat)rotMoon, 0.0f, 0.0f, 1.0f);
-			glColor3f(1.0f, 1.0f, 1.0f);
+
+			glBindTexture(GL_TEXTURE_2D, textures[0][2]);
 			gluSphere(quadric, 0.05f, 10, 10);
 		}
 		glPopMatrix();
 
 		/* drawing the Earth */
-		glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+		glRotatef(270.0f, 1.0f, 0.0f, 0.0f);
 		glRotatef((GLfloat)rotEarth, 0.0f, 0.0f, 1.0f);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glColor3f(0.4f, 0.9f, 1.0f);
+		glBindTexture(GL_TEXTURE_2D, textures[0][1]);
 		gluSphere(quadric, 0.2f, 20, 20);
 	}
 	glPopMatrix();
@@ -493,6 +512,14 @@ void uninitialize(void)
 	{
 		DestroyWindow(ghwnd);	// if unitialize() was not called from WM_DESTROY
 		ghwnd = NULL;
+	}
+
+	if (textures[0][0])
+	{
+		glDeleteTextures(3, textures[0]);
+		textures[0][0] = 0;
+		textures[0][1] = 0;
+		textures[0][2] = 0;
 	}
 
 	if (quadric)
