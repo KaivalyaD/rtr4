@@ -28,7 +28,7 @@ BOOL gbFullScreen = FALSE;
 BOOL gbActiveWindow = FALSE;
 
 // rendering
-GLuint texture_stone = 0;
+GLuint texture_smiley = 0;
 
 // entry-point function
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int iCmdShow)
@@ -313,7 +313,7 @@ int initialize(void)
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// changes concerning textures
-	if (LoadGLTexture(&texture_stone, MAKEINTRESOURCE(IDBITMAP_STONE)) == FALSE)
+	if (LoadGLTexture(&texture_smiley, MAKEINTRESOURCE(IDBITMAP_SMILEY)) == FALSE)
 		return -5;
 
 	glEnable(GL_TEXTURE_2D);
@@ -348,7 +348,7 @@ void display(void)
 	glLoadIdentity();
 
 	glTranslatef(0.0f, 0.0f, -3.0f);
-	glBindTexture(GL_TEXTURE_2D, texture_stone);
+	glBindTexture(GL_TEXTURE_2D, texture_smiley);
 	glBegin(GL_QUADS);
 	{
 		glTexCoord2f(1.0f, 1.0f);
@@ -407,10 +407,10 @@ void uninitialize(void)
 		ghwnd = NULL;
 	}
 
-	if (texture_stone)
+	if (texture_smiley)
 	{
-		glDeleteTextures(1, &texture_stone);
-		texture_stone = NULL;
+		glDeleteTextures(1, &texture_smiley);
+		texture_smiley = NULL;
 	}
 
 	if (gpLog)
