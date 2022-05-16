@@ -28,7 +28,28 @@ BOOL gbFullScreen = FALSE;
 BOOL gbActiveWindow = FALSE;
 
 // for the scene
-int shoulder = 0, elbow = 0;
+/* 
+ * keys for rotation about:
+ * x - *_pitch
+ * y - *_yaw
+ * z - *_roll
+ */
+int shoulder_pitch = 0.0f, shoulder_yaw = 0.0f;
+int elbow_pitch = 0.0f, elbow_roll = 0.0f;
+int wrist_pitch = 0.0f, wrist_roll = 0.0f;
+float finger_a = 0.0f, finger_b = 0.0f;
+
+GLfloat lightAmbient[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+GLfloat lightDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+GLfloat lightSpecular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 100.0f };
+
+GLfloat materialAmbient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+GLfloat materialDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+GLfloat materialSpecular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+GLfloat materialArmShininess = 50.0f;
+GLfloat materialJointShininess = 100.0f;
+
 GLUquadric *quadric = NULL;
 
 // entry-point function
@@ -84,7 +105,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	// create the window
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW,
 		szAppName,
-		TEXT("Robotic Arm: Kaivalya Vishwakumar Deshpande"),
+		TEXT("Better Robotic Arm: Kaivalya Vishwakumar Deshpande"),
 		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
 		(cxScreen - WIN_WIDTH) / 2,
 		(cyScreen - WIN_HEIGHT) / 2,
@@ -200,17 +221,61 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		case 'f':
 			ToggleFullScreen();
 			break;
-		case 'e':
-			elbow = (elbow + 3) % 360;
+
+		case '1':
+			shoulder_yaw = (shoulder_yaw + 3) % 360;
 			break;
-		case 'E':
-			elbow = (elbow - 3) % 360;
+		case '!':
+			shoulder_yaw = (shoulder_yaw - 3) % 360;
 			break;
-		case 's':
-			shoulder = (shoulder + 3) % 360;
+
+		case '2':
+			shoulder_pitch = (shoulder_pitch + 3) % 360;
 			break;
-		case 'S':
-			shoulder = (shoulder - 3) % 360;
+		case '@':
+			shoulder_pitch = (shoulder_pitch - 3) % 360;
+			break;
+
+		case '3':
+			elbow_pitch = (elbow_pitch + 3) % 360;
+			break;
+		case '#':
+			elbow_pitch = (elbow_pitch - 3) % 360;
+			break;
+
+		case '4':
+			elbow_roll = (elbow_roll + 3) % 360;
+			break;
+		case '$':
+			elbow_roll = (elbow_roll - 3) % 360;
+			break;
+
+		case '5':
+			wrist_pitch = (wrist_pitch + 3) % 360;
+			break;
+		case '%':
+			wrist_pitch = (wrist_pitch - 3) % 360;
+			break;
+
+		case '6':
+			wrist_roll = (wrist_roll + 3) % 360;
+			break;
+		case '^':
+			wrist_roll = (wrist_roll - 3) % 360;
+			break;
+
+		case '7':
+			finger_a = min(finger_a + 0.001f, 0.04f);
+			break;
+		case '&':
+			finger_a = max(finger_a - 0.001f, 0.0f);
+			break;
+
+		case '8':
+			finger_b = min(finger_b + 0.001f, 0.04f);
+			break;
+		case '*':
+			finger_b = max(finger_b - 0.001f, 0.0f);
 			break;
 		default:
 			break;
@@ -283,6 +348,7 @@ int initialize(void)
 
 	// variable declarations
 	PIXELFORMATDESCRIPTOR pfd;
+	RECT rc;
 	int iPixelFormatIndex = 0;
 
 	// code
@@ -331,8 +397,26 @@ int initialize(void)
 	glShadeModel(GL_SMOOTH);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
+	// lighting
+	glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+	glEnable(GL_LIGHT0);
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, materialAmbient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, materialDiffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, materialSpecular);
+
+	glEnable(GL_LIGHTING);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	// creating the quadric
+	quadric = gluNewQuadric();
+
 	// warm-up resize call
-	resize(WIN_WIDTH, WIN_HEIGHT);
+	GetClientRect(ghwnd, &rc);
+	resize(rc.right - rc.left, rc.bottom - rc.top);
 
 	return 0;
 }
@@ -353,6 +437,9 @@ void resize(int width, int height)
 
 void display(void)
 {
+	// function prototypes
+	void drawCuboid(float, float, float);
+
 	// code
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -363,52 +450,44 @@ void display(void)
 	
 	// camera transformation
 	gluLookAt(
-		0.0f, 0.0f, 5.0f,
+		0.0f, 0.0f, 4.0f,
 		0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f
 	);
+
+	glTranslatef(0.0f, 1.5f, 0.0f);
+	glMaterialf(GL_FRONT, GL_SHININESS, materialJointShininess);
+	gluSphere(quadric, 0.1f, 50, 50);
+	glRotatef((GLfloat)shoulder_yaw, 0.0f, 1.0f, 0.0f);
+	glRotatef((GLfloat)shoulder_pitch, 1.0f, 0.0f, 0.0f);
+	glMaterialf(GL_FRONT, GL_SHININESS, materialArmShininess);
+	drawCuboid(0.1f, 1.5f, 0.1f);
 	
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glColor3f(0.5f, 0.35f, 0.05f);
+	glTranslatef(0.0f, -1.5f, 0.0f);
+	glMaterialf(GL_FRONT, GL_SHININESS, materialJointShininess);
+	gluSphere(quadric, 0.1f, 50, 50);
+	glRotatef((GLfloat)elbow_pitch, 1.0f, 0.0f, 0.0f);
+	glRotatef((GLfloat)elbow_roll, 0.0f, 0.0f, 1.0f);
+	glMaterialf(GL_FRONT, GL_SHININESS, materialArmShininess);
+	drawCuboid(0.1f, 1.0f, 0.1f);
 
-	// mechanics for the shoulder
-	glTranslatef(0.0f, 0.0f, -6.0f);	// for better visibility
-	glPushMatrix();	// shoulder joint pushed
+	glTranslatef(0.0f, -1.0f, 0.0f);
+	glMaterialf(GL_FRONT, GL_SHININESS, materialJointShininess);
+	gluSphere(quadric, 0.05f, 50, 50);
+	glRotatef((GLfloat)wrist_pitch, 1.0f, 0.0f, 0.0f);
+	glRotatef((GLfloat)wrist_roll, 0.0f, 0.0f, 1.0f);
+	glMaterialf(GL_FRONT, GL_SHININESS, materialArmShininess);
+	drawCuboid(0.2f, 0.2f, 0.1f);
 
-	glRotatef((GLfloat)shoulder, 0.0f, 0.0f, 1.0f);	// rotate the arm
-	glTranslatef(1.0f, 0.0f, 0.0f);	// translate 1 unit ahead of the shoulder in the appropriate direction
-	glPushMatrix();	// push unscaled CTM
+	glPushMatrix();
+	glTranslatef(-0.08f + (GLfloat)finger_a, -0.2f, 0.0f);
+	glMaterialf(GL_FRONT, GL_SHININESS, materialArmShininess);
+	drawCuboid(0.05f, 0.1f, 0.1f);
 
-	glScalef(2.0f, 0.5f, 1.0f);	// all x- and y-coordinates henceforth specified until re-scaled shall be multiplied by 2 and 0.5 resp.
-	/* 
-	 * draw the arm:
-	 * 
-	 * glTranslatef() gets the CTM to (1, 0, 0) i.e. (0, 0, 0) is mapped onto the real (1, 0, 0);
-	 * glScalef() as called above scales all x-values and y-values by a factor of 2 and 0.5 respectively, while all z-values remain unscaled  
-	 * 
-	 * thus, the call to gluSphere() below results in an ellipsoid instead of a sphere
-	 */
-	quadric = gluNewQuadric();
-	gluSphere(quadric, 0.5f, 10, 10);
-	gluDeleteQuadric(quadric);
-
-	glPopMatrix();	// pop unscaled CTM
-	
-	// mechanics for the forearm
-	glTranslatef(1.0f, 0.0f, 0.0f);	// go to the elbow
-
-	glRotatef((GLfloat)elbow, 0.0f, 0.0f, 1.0f);
-	glTranslatef(1.0f, 0.0f, 0.0f);	// translate 1 unit ahead of the elbow in the appropriate direction
-	glPushMatrix();	// push the unscaled CTM
-
-	glScalef(2.0f, 0.5f, 1.0f);
-	quadric = gluNewQuadric();
-	gluSphere(quadric, 0.6f, 10, 10);
-	gluDeleteQuadric(quadric);
-
-	// go back to shoulder joint
 	glPopMatrix();
-	glPopMatrix();
+	glTranslatef(0.08f - (GLfloat)finger_b, -0.2f, 0.0f);
+	glMaterialf(GL_FRONT, GL_SHININESS, materialArmShininess);
+	drawCuboid(0.05f, 0.1f, 0.1f);
 
 	SwapBuffers(ghdc);
 }
@@ -452,10 +531,72 @@ void uninitialize(void)
 		ghwnd = NULL;
 	}
 
+	if (quadric)
+	{
+		gluDeleteQuadric(quadric);
+		quadric = NULL;
+	}
+
 	if (gpLog)
 	{
 		fprintf(gpLog, "fclose: closing log file\n");
 		fclose(gpLog);
 		gpLog = NULL;
 	}
+}
+
+void drawCuboid(float width, float height, float depth)
+{
+	// variable declarations
+	GLfloat xStart = (GLfloat)(-width / 2.0f);
+	GLfloat xEnd = (GLfloat)(width / 2.0f);
+	GLfloat zStart = (GLfloat)(depth / 2.0f);
+	GLfloat zEnd = (GLfloat)(-depth / 2.0f);
+
+	// code
+	glBegin(GL_QUADS);
+	{
+		/* front face */
+		glNormal3f(0.0f, 0.0f, 1.0f);
+		glVertex3f(xStart, 0.0f, zStart);
+		glVertex3f(xStart, (GLfloat)(-height), zStart);
+		glVertex3f(xEnd, (GLfloat)(-height), zStart);
+		glVertex3f(xEnd, 0.0f, zStart);
+
+		/* right face */
+		glNormal3f(1.0f, 0.0f, 0.0f);
+		glVertex3f(xEnd, 0.0f, zStart);
+		glVertex3f(xEnd, (GLfloat)(-height), zStart);
+		glVertex3f(xEnd, (GLfloat)(-height), zEnd);
+		glVertex3f(xEnd, 0.0f, zEnd);
+
+		/* rear face */
+		glNormal3f(0.0f, 0.0f, -1.0f);
+		glVertex3f(xEnd, 0.0f, zEnd);
+		glVertex3f(xEnd, (GLfloat)(-height), zEnd);
+		glVertex3f(xStart, (GLfloat)(-height), zEnd);
+		glVertex3f(xStart, 0.0f, zEnd);
+
+		/* left face */
+		glNormal3f(-1.0f, 0.0f, 0.0f);
+		glVertex3f(xStart, 0.0f, zEnd);
+		glVertex3f(xStart, (GLfloat)(-height), zEnd);
+		glVertex3f(xStart, (GLfloat)(-height), zStart);
+		glVertex3f(xStart, 0.0f, zStart);
+
+		/* top face */
+		glNormal3f(0.0f, 1.0f, 0.0f);
+		glVertex3f(xStart, 0.0f, zStart);
+		glVertex3f(xEnd, 0.0f, zStart);
+		glVertex3f(xEnd, 0.0f, zEnd);
+		glVertex3f(xStart, 0.0f, zEnd);
+
+		/* bottom face */
+		glNormal3f(0.0f, -1.0f, 0.0f);
+		glVertex3f(xStart, (GLfloat)(-height), zStart);
+		glVertex3f(xStart, (GLfloat)(-height), zEnd);
+		glVertex3f(xEnd, (GLfloat)(-height), zEnd);
+		glVertex3f(xEnd, (GLfloat)(-height), zStart);
+	}
+	glEnd();
 }
