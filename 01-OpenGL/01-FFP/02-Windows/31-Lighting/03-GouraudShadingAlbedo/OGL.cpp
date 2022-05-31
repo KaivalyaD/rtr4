@@ -28,18 +28,6 @@ BOOL gbFullScreen = FALSE;
 BOOL gbActiveWindow = FALSE;
 
 // rendering globals
-/*
-// settings for simple, realistic lighting
-GLfloat lightAmbient[] = {0.0f, 0.0f, 0.0f, 1.0f};
-GLfloat lightDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat lightSpecular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat lightPosition[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-GLfloat materialAmbient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-GLfloat materialDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat materialSpecular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat materialShininess = 50.0f; */
-
 // settings for Albedo
 GLfloat lightAmbient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 GLfloat lightDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -406,7 +394,7 @@ void display(void)
 
 	glTranslatef(0.0f, 0.0f, -4.0f);
 	glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-	gluSphere(quadric, 1.0f, 50, 50);
+	gluSphere(quadric, 1.0f, 200, 200);
 
 	SwapBuffers(ghdc);
 }
