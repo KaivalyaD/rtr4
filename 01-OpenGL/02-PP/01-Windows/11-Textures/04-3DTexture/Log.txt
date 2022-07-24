@@ -418,6 +418,8 @@ vertex shader was compiled without errors
 fragment shader was compiled without errors
 shader program was linked without errors
 created OpenGL context successfully and made it the current context
+window out of focus
+window in focus
 destroying after receiving esc
 window out of focus
 detached and deleted 2 shader objects

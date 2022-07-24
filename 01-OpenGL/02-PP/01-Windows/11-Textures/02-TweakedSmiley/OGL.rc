@@ -1,0 +1,4 @@
+#include "OGL.h"
+
+MYICON ICON ".\\resources\\Namasakaram.ico"
+IDBITMAP_SMILEY BITMAP ".\\resources\\Smiley.bmp"
