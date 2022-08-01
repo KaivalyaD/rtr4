@@ -1,0 +1,26 @@
+Definition of the Normal Matrix:
+orientation-only part of the transposed inverted model-view matrix.
+[i.e. (1st 3 rows) x (1st 3 cols) of transposed inverted model-view matrix]
+
+Step 1:
+calculate eye co-ordinates by multiplying position with model-view matrix;
+
+Step 2:
+calculate normal matrix from model-view matrix;
+
+Step 3:
+calculate transformed normals by multiplying supplied normals with the normal matrix and normalizing;
+
+Step 4:
+calculate source light direction by subtracting eye position from light position and normalizing;
+
+Step 5:
+calculate color of the diffused light using the following equation:
+
+	L = Ld * Kd * (s.n)
+
+	[L : color of the diffuse light]
+	[Ld: supplied diffused light color]
+	[Kd: color reflected by the material]
+	[s : source light direction]
+	[n : object normal]
