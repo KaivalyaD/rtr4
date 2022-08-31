@@ -1,0 +1,20 @@
+How to get a OpenGL core-profile-complient context:
+(the following algorithm has its roots in the Apple's former GPU manufacturer, Imagination's SDK)
+
+1. add PP-related attributes to the framebuffer attributes array;
+
+2. retrieve ALL available framebuffer configurations from XWindows;
+
+3. from those available, choose the one that supports PP and best suits your application;
+
+4. retrieve the PP-complient XVisualInfo from the chosen configuration;
+
+5. retrieve the address of that glXContext-creating function which support the creation of the chosen FB attributes;
+    (since this function is not declared in the header, YOU must wrangle it from the loaded OpenGL driver libraries)
+
+6. create glXContext-related PP attributes, particularly the version and the profile;
+    (if OpenGL fails to get you the context, then fallback to the default older PP-supporting context)
+
+7. if you find the context you wished for, check if hardware-rendering is supported or not (i.e. are you running on native drivers
+    or on software-drivers).
+
