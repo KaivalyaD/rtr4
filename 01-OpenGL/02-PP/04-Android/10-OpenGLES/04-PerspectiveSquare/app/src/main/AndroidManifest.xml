@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.kayd.window">
+
+    <application
+        android:icon="@mipmap/namasakaram"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/namasakaram_round"
+        android:theme="@style/Theme.AppCompat">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />  <!-- This is the main activity -->
+
+                <category android:name="android.intent.category.LAUNCHER" />  <!-- This is a self executable (launched upon tapping package) -->
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
