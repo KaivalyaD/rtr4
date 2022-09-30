@@ -447,12 +447,16 @@ int initialize(void)
         "#version 460 core\n" \
         "\n" \
         "in vec4 a_position;\n" \
+        "in vec4 a_color;\n" \
         "\n" \
         "uniform mat4 u_mvpMatrix;\n" \
+        "\n" \
+        "out vec4 a_color_out;\n" \
         "\n" \
         "void main(void)\n" \
         "{\n" \
             "gl_Position = u_mvpMatrix * a_position;\n" \
+            "a_color_out = a_color;\n" \
         "}\n";
 
     GLuint vertexShaderObject = glCreateShader(GL_VERTEX_SHADER);
@@ -495,11 +499,13 @@ int initialize(void)
     const GLchar *fragmentShaderSourceCode =
         "#version 460 core\n" \
         "\n" \
+        "in vec4 a_color_out;\n" \
+        "\n" \
         "out vec4 FragColor;\n" \
         "\n" \
         "void main(void)\n" \
         "{\n" \
-            "FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" \
+            "FragColor = a_color_out;\n" \
         "}\n"; \
 
     GLuint fragmentShaderObject = glCreateShader(GL_FRAGMENT_SHADER);
@@ -542,6 +548,8 @@ int initialize(void)
     shaderProgramObject = glCreateProgram();
     glAttachShader(shaderProgramObject, vertexShaderObject);
     glAttachShader(shaderProgramObject, fragmentShaderObject);
+    glBindAttribLocation(shaderProgramObject, KVD_ATTRIBUTE_POSITION, "a_position");
+    glBindAttribLocation(shaderProgramObject, KVD_ATTRIBUTE_COLOR, "a_color");
     glLinkProgram(shaderProgramObject);
     glGetProgramiv(shaderProgramObject, GL_LINK_STATUS, &status);
     if (status == GL_FALSE)
@@ -693,6 +701,7 @@ void render(void)
             push(modelViewMatrix, stackMatModelView);
             {
                 glUniformMatrix4fv(mvpMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix * top(stackMatModelView));
+                glVertexAttrib4f(KVD_ATTRIBUTE_COLOR, 1.0f, 0.5f, 0.0f, 1.0f);
                 glBindVertexArray(vao);
                 {
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboSphereElements);
@@ -710,6 +719,7 @@ void render(void)
                 push(modelViewMatrix, stackMatModelView);
                 {
                     glUniformMatrix4fv(mvpMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix * top(stackMatModelView));
+                    glVertexAttrib4f(KVD_ATTRIBUTE_COLOR, 0.2f, 0.3f, 0.8f, 1.0f);
                     glBindVertexArray(vao);
                     {
                         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboSphereElements);
@@ -731,6 +741,7 @@ void render(void)
                 push(modelViewMatrix, stackMatModelView);
                 {
                     glUniformMatrix4fv(mvpMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix * top(stackMatModelView));
+                    glVertexAttrib4f(KVD_ATTRIBUTE_COLOR, 0.8f, 0.8f, 0.8f, 1.0f);
                     glBindVertexArray(vao);
                     {
                         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboSphereElements);
