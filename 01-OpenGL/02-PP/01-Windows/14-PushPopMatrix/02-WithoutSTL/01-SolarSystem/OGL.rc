@@ -1,0 +1,7 @@
+#include "OGL.h"
+
+MYICON ICON ".\\resources\\Namasakaram.ico"
+
+IDBM_TEXTURE_SUN BITMAP ".\\resources\\Sun.bmp"
+IDBM_TEXTURE_EARTH BITMAP ".\\resources\\Earth.bmp"
+IDBM_TEXTURE_MOON BITMAP ".\\resources\\Moon.bmp"
