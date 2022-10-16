@@ -1,0 +1,3 @@
+#include "OGL.h"
+
+MYICON ICON ".\\resources\\Namasakaram.ico"
