@@ -405,7 +405,7 @@ int initialize(void)
 		"\n" \
 		"uniform mat4 u_mvpMatrix;\n" \
 		"\n" \
-		"layout(triangle_strip, max_vertices = 9) out;\n";
+		"layout(triangle_strip, max_vertices = 9) out;\n" \
 		"\n" \
 		"void main(void)\n" \
 		"{\n" \

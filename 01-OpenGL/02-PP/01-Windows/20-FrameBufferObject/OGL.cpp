@@ -29,6 +29,8 @@ using namespace vmath;
 #define FBO_WIDTH 512
 #define FBO_HEIGHT 512
 
+#define DEG_TO_RAD(x) (((x) * (M_PI)) / (180.0f))
+
 // global function declarations
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -94,6 +96,8 @@ GLint kdUniform_Sphere;
 GLint ksUniform_Sphere;
 GLint materialShininessUniform_Sphere;
 GLint lightEnabledUniform_Sphere;
+
+mat4 perspectiveProjectionMatrix_Sphere;
 
 // object data RAM
 float sphereVertices[1146];
@@ -218,6 +222,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 		fprintf(gpLog, "glewInit(): failed\n");
 		uninitialize();
 	}
+	else if (iRetVal == -6)
+	{
+		fprintf(gpLog, "createFBO(): failed\n");
+		uninitialize();
+	}
 	else
 	{
 		fprintf(gpLog, "created OpenGL context successfully and made it the current context\n");
@@ -300,6 +309,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		case 'f':
 			ToggleFullScreen();
 			break;
+
+		case 'L':
+		case 'l':
+			/* toggle the lights on or off */
+			if (bLights)
+				bLights = FALSE;
+			else
+				bLights = TRUE;
+			break;
+
 		default:
 			break;
 		}
@@ -368,6 +387,8 @@ int initialize(void)
 {
 	// function prototypes
 	void logGLInfo(void);
+	bool createFBO(GLint, GLint);
+	int initializeSphere(int, int);
 	void resize(int, int);
 	void uninitialize(void);
 
@@ -679,6 +700,334 @@ int initialize(void)
 	GetClientRect(ghwnd, &rc);
 	resize(rc.right - rc.left, rc.bottom - rc.top);
 
+	/**************** FBO ****************/
+	fboResult = createFBO(FBO_WIDTH, FBO_HEIGHT);
+	if (fboResult == true)
+	{
+		int ret = initializeSphere(FBO_WIDTH, FBO_HEIGHT);
+		switch (ret)
+		{
+		default:
+			fprintf(gpLog, "successfully initialized the sphere FBO\n");
+			break;
+		}
+	}
+	else
+		return -6;
+
+	return 0;
+}
+
+int initializeSphere(int width, int height)
+{
+	// function prototypes
+	void resizeSphere(int, int);
+	void uninitializeSphere(void);
+
+	// variable declarations
+	GLint status;
+	GLint infoLogLength;
+	char *log = NULL;
+
+	// code
+	// vertex shader
+	status = 0;
+	infoLogLength = 0;
+	log = NULL;
+
+	const GLchar *vertexShaderSourceCode =
+		"#version 460 core\n" \
+		"\n" \
+		"in vec4 a_position;\n" \
+		"in vec3 a_normal;\n" \
+		"\n" \
+		"uniform mat4 u_modelMatrix;\n" \
+		"uniform mat4 u_viewMatrix;\n" \
+		"uniform mat4 u_projectionMatrix;\n" \
+		"\n" \
+		"uniform vec4 u_lightPosition[3];\n" \
+		"uniform int u_lightEnabled;\n" \
+		"\n" \
+		"out vec3 transformedNormal;\n" \
+		"out vec3 lightDirection[3];\n" \
+		"out vec3 viewerVector;\n" \
+		"\n" \
+		"void main(void)\n" \
+		"{\n" \
+			"if (u_lightEnabled == 1)\n" \
+			"{\n" \
+				"vec4 eyeCoordinate = u_viewMatrix * u_modelMatrix * a_position;\n" \
+				"mat3 normalMatrix = mat3(u_viewMatrix * u_modelMatrix);\n" \
+				"\n" \
+				"transformedNormal = normalMatrix * a_normal;\n" \
+				"viewerVector = -eyeCoordinate.xyz;\n" \
+				"\n" \
+				"for (int i = 0; i < 3; i++)\n" \
+				"{\n" \
+					"lightDirection[i] = vec3(u_lightPosition[i]) - eyeCoordinate.xyz;\n" \
+				"}\n" \
+			"}\n" \
+			"\n" \
+			"gl_Position = u_projectionMatrix * u_viewMatrix * u_modelMatrix * a_position;\n" \
+		"}\n";
+
+	GLuint vertexShaderObject = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShaderObject, 1, (const GLchar **)&vertexShaderSourceCode, NULL);
+	glCompileShader(vertexShaderObject);
+	glGetShaderiv(vertexShaderObject, GL_COMPILE_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		fprintf(gpLog, "*** sphere: vertex shader compilation errors ***\n");
+
+		glGetShaderiv(vertexShaderObject, GL_INFO_LOG_LENGTH, &infoLogLength);
+		if (infoLogLength > 0)
+		{
+			log = (char *)malloc(infoLogLength * sizeof(char));
+			if (log)
+			{
+				GLsizei written = 0;
+
+				glGetShaderInfoLog(vertexShaderObject, infoLogLength * sizeof(char), &written, log);
+				fprintf(gpLog, "sphere vertex shader compilation log (%d bytes):\n%s\n", written, log);
+				free(log);
+				log = NULL;
+			}
+			else
+				fprintf(gpLog, "\tsphere: malloc: cannot allocate memory to hold the compilation log\n");
+		}
+		else
+			fprintf(gpLog, "\tsphere: there is nothing to print\n");
+
+		uninitializeSphere();	// application exits as calling DestroyWindow() in uninitialize()
+	}
+	fprintf(gpLog, "sphere: vertex shader was compiled without errors\n");
+
+	// fragment shader
+	status = 0;
+	infoLogLength = 0;
+	log = NULL;
+
+	const GLchar *fragmentShaderSourceCode =
+		"#version 460 core\n" \
+		"\n" \
+		"in vec3 transformedNormal;\n" \
+		"in vec3 lightDirection[3];\n" \
+		"in vec3 viewerVector;\n" \
+		"\n" \
+		"uniform vec3 u_La[3];\n" \
+		"uniform vec3 u_Ld[3];\n" \
+		"uniform vec3 u_Ls[3];\n" \
+		"\n" \
+		"uniform vec3 u_Ka;\n" \
+		"uniform vec3 u_Kd;\n" \
+		"uniform vec3 u_Ks;\n" \
+		"uniform float u_materialShininess;\n" \
+		"\n" \
+		"uniform int u_lightEnabled;\n" \
+		"\n" \
+		"out vec4 FragColor;\n" \
+		"\n" \
+		"void main(void)\n" \
+		"{\n" \
+			"vec3 phongADSLight = vec3(0.0, 0.0, 0.0);\n" \
+			"\n" \
+			"if (u_lightEnabled == 1)\n" \
+			"{\n" \
+				"vec3 normalizedTransformedNormal = normalize(transformedNormal);\n" \
+				"vec3 normalizedViewerVector = normalize(viewerVector);\n" \
+				"\n" \
+				"vec3 componentAmbient[3];\n" \
+				"vec3 normalizedLightDirection[3];\n" \
+				"vec3 componentDiffuse[3];\n" \
+				"vec3 reflectionVector[3];\n" \
+				"vec3 componentSpecular[3];\n" \
+				"for (int i = 0; i < 3; i++)\n" \
+				"{\n" \
+					"componentAmbient[i] = u_La[i] * u_Ka;\n" \
+					"\n" \
+					"normalizedLightDirection[i] = normalize(lightDirection[i]);\n" \
+					"componentDiffuse[i] = u_Ld[i] * u_Kd * max(dot(normalizedLightDirection[i], normalizedTransformedNormal), 0.0);\n" \
+					"\n" \
+					"reflectionVector[i] = reflect(-normalizedLightDirection[i], normalizedTransformedNormal);\n" \
+					"componentSpecular[i] = u_Ls[i] * u_Ks * pow(max(dot(reflectionVector[i], normalizedViewerVector), 0.0), u_materialShininess);\n" \
+					"\n" \
+					"phongADSLight += componentAmbient[i] + componentDiffuse[i] + componentSpecular[i];\n" \
+				"}\n" \
+			"}\n" \
+			"else\n" \
+			"{\n" \
+				"phongADSLight = vec3(1.0, 1.0, 1.0);\n" \
+			"}\n" \
+			"\n" \
+			"FragColor = vec4(phongADSLight, 1.0);\n" \
+		"}\n";
+
+	GLuint fragmentShaderObject = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShaderObject, 1, (const GLchar **)&fragmentShaderSourceCode, NULL);
+	glCompileShader(fragmentShaderObject);
+	glGetShaderiv(fragmentShaderObject, GL_COMPILE_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		fprintf(gpLog, "*** sphere: fragment shader compilation errors ***\n");
+
+		glGetShaderiv(fragmentShaderObject, GL_INFO_LOG_LENGTH, &infoLogLength);
+		if (infoLogLength > 0)
+		{
+			log = (char *)malloc(infoLogLength * sizeof(char));
+			if (log)
+			{
+				GLsizei written = 0;
+
+				glGetShaderInfoLog(fragmentShaderObject, infoLogLength, &written, log);
+				fprintf(gpLog, "sphere: fragment shader compilation log (%d bytes):\n%s\n", written, log);
+				free(log);
+				log = NULL;
+			}
+			else
+				fprintf(gpLog, "\tsphere: malloc: cannot allocate memory to hold the compilation log\n");
+		}
+		else
+			fprintf(gpLog, "\tsphere: there is nothing to print\n");
+
+		uninitializeSphere();
+	}
+	fprintf(gpLog, "sphere: fragment shader was compiled without errors\n");
+
+	// shader program
+	status = 0;
+	infoLogLength = 0;
+	log = NULL;
+
+	sphereShaderProgramObject = glCreateProgram();
+	glAttachShader(sphereShaderProgramObject, vertexShaderObject);
+	glAttachShader(sphereShaderProgramObject, fragmentShaderObject);
+	glBindAttribLocation(sphereShaderProgramObject, KVD_ATTRIBUTE_POSITION, "a_position");
+	glBindAttribLocation(sphereShaderProgramObject, KVD_ATTRIBUTE_NORMAL, "a_normal");
+	glLinkProgram(sphereShaderProgramObject);
+
+	glGetProgramiv(sphereShaderProgramObject, GL_LINK_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		fprintf(gpLog, "*** sphere: there were linking errors ***\n");
+
+		glGetProgramiv(sphereShaderProgramObject, GL_INFO_LOG_LENGTH, &infoLogLength);
+		if (infoLogLength > 0)
+		{
+			log = (char *)malloc(infoLogLength * sizeof(char));
+			if (log)
+			{
+				GLsizei written = 0;
+
+				glGetProgramInfoLog(sphereShaderProgramObject, infoLogLength * sizeof(char), &written, log);
+				fprintf(gpLog, "\tsphere: link time info log (%d bytes):\n%s\n", written, log);
+				free(log);
+				log = NULL;
+			}
+			else
+				fprintf(gpLog, "\tsphere: malloc: cannot allocate memory to hold the linking log\n");
+		}
+		else
+			fprintf(gpLog, "\tsphere: there is nothing to print\n");
+
+		uninitializeSphere();
+	}
+	fprintf(gpLog, "sphere: shader program was linked without errors\n");
+
+	// per-fragment lighting shader program post-linking processing
+	modelMatrixUniform_Sphere = glGetUniformLocation(sphereShaderProgramObject, "u_modelMatrix");
+	viewMatrixUniform_Sphere = glGetUniformLocation(sphereShaderProgramObject, "u_viewMatrix");
+	projectionMatrixUniform_Sphere = glGetUniformLocation(sphereShaderProgramObject, "u_projectionMatrix");
+
+	laUniform_Sphere[0] = glGetUniformLocation(sphereShaderProgramObject, "u_La[0]");
+	ldUniform_Sphere[0] = glGetUniformLocation(sphereShaderProgramObject, "u_Ld[0]");
+	lsUniform_Sphere[0] = glGetUniformLocation(sphereShaderProgramObject, "u_Ls[0]");
+	lightPositionUniform_Sphere[0] = glGetUniformLocation(sphereShaderProgramObject, "u_lightPosition[0]");
+
+	laUniform_Sphere[1] = glGetUniformLocation(sphereShaderProgramObject, "u_La[1]");
+	ldUniform_Sphere[1] = glGetUniformLocation(sphereShaderProgramObject, "u_Ld[1]");
+	lsUniform_Sphere[1] = glGetUniformLocation(sphereShaderProgramObject, "u_Ls[1]");
+	lightPositionUniform_Sphere[1] = glGetUniformLocation(sphereShaderProgramObject, "u_lightPosition[1]");
+
+	laUniform_Sphere[2] = glGetUniformLocation(sphereShaderProgramObject, "u_La[2]");
+	ldUniform_Sphere[2] = glGetUniformLocation(sphereShaderProgramObject, "u_Ld[2]");
+	lsUniform_Sphere[2] = glGetUniformLocation(sphereShaderProgramObject, "u_Ls[2]");
+	lightPositionUniform_Sphere[2] = glGetUniformLocation(sphereShaderProgramObject, "u_lightPosition[2]");
+
+	kaUniform_Sphere = glGetUniformLocation(sphereShaderProgramObject, "u_Ka");
+	kdUniform_Sphere = glGetUniformLocation(sphereShaderProgramObject, "u_Kd");
+	ksUniform_Sphere = glGetUniformLocation(sphereShaderProgramObject, "u_Ks");
+	materialShininessUniform_Sphere = glGetUniformLocation(sphereShaderProgramObject, "u_materialShininess");
+
+	lightEnabledUniform_Sphere = glGetUniformLocation(sphereShaderProgramObject, "u_lightEnabled");
+
+	// vao
+	glGenVertexArrays(1, &vaoSphere);
+	glBindVertexArray(vaoSphere);
+	{
+		// get sphere data
+		getSphereVertexData(sphereVertices, sphereNormals, sphereTexCoords, sphereElements);
+		sphereNumVertices = getNumberOfSphereVertices();
+		sphereNumElements = getNumberOfSphereElements();
+
+		// positions
+		glGenBuffers(1, &vboSphereVertices);
+		glBindBuffer(GL_ARRAY_BUFFER, vboSphereVertices);
+		{
+			glBufferData(GL_ARRAY_BUFFER, sizeof(sphereVertices), sphereVertices, GL_STATIC_DRAW);
+			glVertexAttribPointer(KVD_ATTRIBUTE_POSITION, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+			glEnableVertexAttribArray(KVD_ATTRIBUTE_POSITION);
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		// normals
+		glGenBuffers(1, &vboSphereNormals);
+		glBindBuffer(GL_ARRAY_BUFFER, vboSphereNormals);
+		{
+			glBufferData(GL_ARRAY_BUFFER, sizeof(sphereNormals), sphereNormals, GL_STATIC_DRAW);
+			glVertexAttribPointer(KVD_ATTRIBUTE_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+			glEnableVertexAttribArray(KVD_ATTRIBUTE_NORMAL);
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		// elements
+		glGenBuffers(1, &vboSphereElements);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboSphereElements);
+		{
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(sphereElements), sphereElements, GL_STATIC_DRAW);
+		}
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+	glBindVertexArray(0);
+
+	// set clear color
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+	// depth-related changes
+	glClearDepth(1.0f);
+	glDepthFunc(GL_LEQUAL);
+	glEnable(GL_DEPTH_TEST);
+
+	// lights
+	lights_Sphere[0].ambient = vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	lights_Sphere[0].diffuse = vmath::vec4(1.0f, 0.0f, 0.0f, 1.0f);  // red
+	lights_Sphere[0].specular = vmath::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	lights_Sphere[0].position = vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	lights_Sphere[1].ambient = vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	lights_Sphere[1].diffuse = vmath::vec4(0.0f, 1.0f, 0.0f, 1.0f);  // blue
+	lights_Sphere[1].specular = vmath::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+	lights_Sphere[1].position = vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	lights_Sphere[2].ambient = vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	lights_Sphere[2].diffuse = vmath::vec4(0.0f, 0.0f, 1.0f, 1.0f);  // green
+	lights_Sphere[2].specular = vmath::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+	lights_Sphere[2].position = vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	perspectiveProjectionMatrix_Sphere = mat4::identity();
+
+	// warm-up resize
+	resizeSphere(FBO_WIDTH, FBO_HEIGHT);
+
 	return 0;
 }
 
@@ -713,14 +1062,36 @@ void resize(int width, int height)
 	if (height == 0)
 		height = 1;	// to prevent a divide by zero when calculating the width/height ratio
 
+	winWidth = width;
+	winHeight = height;
+
 	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
 
 	aspectRatio = (GLfloat)width / (GLfloat)height;
 	perspectiveProjectionMatrix_Cube = vmath::perspective(45.0f, aspectRatio, 0.1f, 100.0f);
 }
 
+void resizeSphere(int width, int height)
+{
+	// variable declarations
+	GLfloat aspectRatio;
+
+	// code
+	if (height == 0)
+		height = 1;	// to prevent a divide by zero when calculating the width/height ratio
+
+	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
+
+	aspectRatio = (GLfloat)width / (GLfloat)height;
+	perspectiveProjectionMatrix_Sphere = vmath::perspective(45.0f, aspectRatio, 0.1f, 100.0f);
+}
+
 void display(void)
 {
+	// function prototypes
+	void displaySphere(GLint, GLint);
+	void updateSphere(void);
+
 	// variable declarations
 	mat4 translationMatrix = mat4::identity();
 	mat4 rotationMatrix_X = mat4::identity();
@@ -733,8 +1104,19 @@ void display(void)
 	mat4 modelViewProjectionMatrix = mat4::identity();
 
 	// code
+	/****************** FBO setup *****************/
+	if (fboResult)
+	{
+		displaySphere(FBO_WIDTH, FBO_HEIGHT);
+		updateSphere();
+	}
+
+	/****************** Default *****************/
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	resize(winWidth, winHeight);
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+
 	glUseProgram(cubeShaderProgramObject);
 	{
 		// transformations
@@ -754,6 +1136,7 @@ void display(void)
 		// setting texture params
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(textureSamplerUniform, 0);
+		glBindTexture(GL_TEXTURE_2D, fboTexture);
 
 		// drawing
 		glBindVertexArray(vaoCube);
@@ -764,6 +1147,7 @@ void display(void)
 			glDrawArrays(GL_TRIANGLE_FAN, 16, 4);
 			glDrawArrays(GL_TRIANGLE_FAN, 20, 4);
 		glBindVertexArray(0);
+
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	glUseProgram(0);
@@ -774,20 +1158,114 @@ void display(void)
 void update(void)
 {
 	// code
-	theta_Cube = theta_Cube + 0.05f;
+	theta_Cube = theta_Cube + 0.5f;
 	if (theta_Cube >= 360.0f)
 		theta_Cube = theta_Cube - 360.0f;
+}
+
+void displaySphere(GLint textureWidth, GLint textureHeight)
+{
+	// variable declarations
+	mat4 translationMatrix = mat4::identity();
+	mat4 modelMatrix = mat4::identity();
+	mat4 viewMatrix = mat4::identity();
+
+	// code
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	resizeSphere(textureWidth, textureHeight);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// transformations
+	translationMatrix = vmath::translate(0.0f, 0.0f, -2.0f);
+	modelMatrix = translationMatrix;
+
+	// draw
+	glUseProgram(sphereShaderProgramObject);
+	{
+		glUniformMatrix4fv(modelMatrixUniform_Sphere, 1, GL_FALSE, modelMatrix);
+		glUniformMatrix4fv(viewMatrixUniform_Sphere, 1, GL_FALSE, viewMatrix);
+		glUniformMatrix4fv(projectionMatrixUniform_Sphere, 1, GL_FALSE, perspectiveProjectionMatrix_Sphere);
+
+		if (bLights)
+		{
+			lights_Sphere[0].position = vmath::vec4(0.0f, 10.0f * sinf(DEG_TO_RAD(theta_Sphere)), 10.0f * cosf(DEG_TO_RAD(theta_Sphere)), 1.0f);
+			lights_Sphere[1].position = vmath::vec4(10.0f * cosf(DEG_TO_RAD(theta_Sphere)), 0.0f, 10.0f * sinf(DEG_TO_RAD(theta_Sphere)), 1.0f);
+			lights_Sphere[2].position = vmath::vec4(10.0f * cosf(DEG_TO_RAD(theta_Sphere)), 10.0f * sinf(DEG_TO_RAD(theta_Sphere)), 0.0f, 1.0f);
+
+			for (int i = 0; i < 3; i++)
+			{
+				glUniform3fv(laUniform_Sphere[i], 1, lights_Sphere[i].ambient);
+				glUniform3fv(ldUniform_Sphere[i], 1, lights_Sphere[i].diffuse);
+				glUniform3fv(lsUniform_Sphere[i], 1, lights_Sphere[i].specular);
+				glUniform4fv(lightPositionUniform_Sphere[i], 1, lights_Sphere[i].position);
+			}
+
+			glUniform3fv(kaUniform_Sphere, 1, materialAmbient_Sphere);
+			glUniform3fv(kdUniform_Sphere, 1, materialDiffuse_Sphere);
+			glUniform3fv(ksUniform_Sphere, 1, materialSpecular_Sphere);
+			glUniform1f(materialShininessUniform_Sphere, materialShininess_Sphere);
+
+			glUniform1i(lightEnabledUniform_Sphere, 1);
+		}
+		else
+		{
+			glUniform1i(lightEnabledUniform_Sphere, 0);
+		}
+
+		glBindVertexArray(vaoSphere);
+		{
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboSphereElements);
+			glDrawElements(GL_TRIANGLES, sphereNumElements, GL_UNSIGNED_SHORT, 0);
+		}
+		glBindVertexArray(0);
+	}
+	glUseProgram(0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void updateSphere(void)
+{
+	// code
+	// deliberately kept separate from update() for isolation
+	theta_Sphere = theta_Sphere + 1.5f;
+	if (theta_Sphere >= 360.0f)
+		theta_Sphere = theta_Sphere - 360.0f;
 }
 
 void uninitialize(void)
 {
 	// function prototypes
 	void ToggleFullScreen(void);
+	void uninitializeSphere(void);
 
 	// code
 	if (gbFullScreen)
 	{
 		ToggleFullScreen();
+	}
+
+	uninitializeSphere();
+
+	if (fboTexture)
+	{
+		glDeleteTextures(1, &fboTexture);
+		fboTexture = 0;
+	}
+
+	if (rbo)
+	{
+		glDeleteRenderbuffers(1, &rbo);
+		rbo = 0;
+	}
+
+	if (fbo)
+	{
+		glDeleteBuffers(1, &fbo);
+		fbo = 0;
 	}
 
 	if (vboTexCoords)
@@ -864,4 +1342,124 @@ void uninitialize(void)
 		fclose(gpLog);
 		gpLog = NULL;
 	}
+}
+
+void uninitializeSphere(void)
+{
+	// code
+	if (vboSphereElements)
+	{
+		glDeleteBuffers(1, &vboSphereElements);
+		vboSphereElements = 0;
+	}
+
+	if (vboSphereNormals)
+	{
+		glDeleteBuffers(1, &vboSphereNormals);
+		vboSphereNormals = 0;
+	}
+
+	if (vboSphereVertices)
+	{
+		glDeleteBuffers(1, &vboSphereVertices);
+		vboSphereVertices = 0;
+	}
+
+	if (vaoSphere)
+	{
+		glDeleteVertexArrays(1, &vaoSphere);
+		vaoSphere = 0;
+	}
+
+	if (sphereShaderProgramObject)
+	{
+		GLsizei numAttachedShaders = 0;
+		GLuint *shaderObjects = NULL;
+
+		glUseProgram(sphereShaderProgramObject);
+
+		glGetProgramiv(sphereShaderProgramObject, GL_ATTACHED_SHADERS, &numAttachedShaders);
+		shaderObjects = (GLuint *)malloc(numAttachedShaders * sizeof(GLuint));
+		glGetAttachedShaders(sphereShaderProgramObject, numAttachedShaders, &numAttachedShaders, shaderObjects);
+
+		for (GLsizei i = 0; i < numAttachedShaders; i++)
+		{
+			glDetachShader(sphereShaderProgramObject, shaderObjects[i]);
+			glDeleteShader(shaderObjects[i]);
+			shaderObjects[i] = 0;
+		}
+		free(shaderObjects);
+		shaderObjects = NULL;
+		fprintf(gpLog, "sphere: detached and deleted %d shader objects\n", numAttachedShaders);
+
+		glUseProgram(0);
+		glDeleteProgram(sphereShaderProgramObject);
+		sphereShaderProgramObject = 0;
+		fprintf(gpLog, "sphere: deleted shader program object\n");
+	}
+}
+
+bool createFBO(GLint textureWidth, GLint textureHeight)
+{
+	// variable declarations
+	int maxRenderbufferSize;
+
+	// code
+	// check available renderbuffer size 
+	glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &maxRenderbufferSize);
+	if (maxRenderbufferSize < textureWidth || maxRenderbufferSize < textureHeight)
+	{
+		fprintf(
+			gpLog,
+			"*** textureWidth(%d) or textureHeight(%d) exceeded maximum Renderbuffer size(%d) ***\n",
+			textureWidth,
+			textureHeight,
+			maxRenderbufferSize
+		);
+		return false;
+	}
+
+	// create a framebuffer object
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	{
+		// create renderbuffer object(s)
+		glGenRenderbuffers(1, &rbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+
+		// specify the format and storage for the renderbuffer
+		// using COPONENT16 for GLES applications, has nothing to do with depth buffer, but with color depth
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, textureWidth, textureHeight);
+
+		// create an empty texture for the target scene
+		glGenTextures(1, &fboTexture);
+		glBindTexture(GL_TEXTURE_2D, fboTexture);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+		// again, a GLES-safe call (5 + 6 + 5 = 16 bit of color depth as promised when allocating storage)
+		// Aftab Munshi and Ginsberg, both suggest use 565 instead of any other combinations for better quality textures
+		// why more bits to green? human eyes are more susceptible to the green spectrum
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
+			
+		// hand above texture over to the FBO
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
+
+		// hand above renderbuffer over to the FBO
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+		// check whether FBO creation is successful or not
+		GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (result != GL_FRAMEBUFFER_COMPLETE)
+		{
+			fprintf(gpLog, "*** framebuffer is not complete ***\n");
+			return false;
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);  // renderbuffer and texture objects associated with an FBO are unbound automatically
+
+	return true;
 }

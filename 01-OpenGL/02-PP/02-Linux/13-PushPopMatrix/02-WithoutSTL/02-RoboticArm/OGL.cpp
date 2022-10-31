@@ -1134,7 +1134,7 @@ GLuint generateCuboids(GLuint *pVboPositions, GLuint *pVboNormals, const size_t 
 
             for(int i = 0; i < count; i++)
             {
-                float faceVertices[] = {
+                float faceNormals[] = {
                     // front
                     0.0f,  0.0f,  1.0f,
                     0.0f,  0.0f,  1.0f,
@@ -1172,7 +1172,7 @@ GLuint generateCuboids(GLuint *pVboPositions, GLuint *pVboNormals, const size_t 
                     0.0f, -1.0f, 0.0f
                 };
 
-                glBufferSubData(GL_ARRAY_BUFFER, i * 24 * 3 * sizeof(float), 24 * 3 * sizeof(float), faceVertices);
+                glBufferSubData(GL_ARRAY_BUFFER, i * 24 * 3 * sizeof(float), 24 * 3 * sizeof(float), faceNormals);
             }
 
             glEnableVertexAttribArray(KVD_ATTRIBUTE_NORMAL);
