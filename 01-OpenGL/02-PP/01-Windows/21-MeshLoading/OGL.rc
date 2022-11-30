@@ -1,0 +1,4 @@
+#include "OGL.h"
+
+MYICON ICON ".\\resources\\Namasakaram.ico"
+IDBITMAP_SUZANNE BITMAP ".\\resources\\Suzanne.bmp"
