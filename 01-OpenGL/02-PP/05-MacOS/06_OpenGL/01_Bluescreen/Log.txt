@@ -1,0 +1,6 @@
+application started successfully
+OpenGL Vendor: Intel Inc.
+OpenGL Renderer: Intel(R) UHD Graphics 617
+OpenGL Version: 4.1 INTEL-14.7.8
+GLSL Version: 4.10
+application terminated successfully
