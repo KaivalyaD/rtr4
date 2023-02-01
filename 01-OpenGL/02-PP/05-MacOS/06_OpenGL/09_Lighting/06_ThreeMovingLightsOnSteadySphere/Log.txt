@@ -1,0 +1,68 @@
+application started successfully
+
+-------------------- OpenGL Properties --------------------
+
+OpenGL Vendor   : Intel Inc.
+OpenGL Renderer : Intel(R) UHD Graphics 617
+OpenGL Version  : 4.1 INTEL-14.7.8
+GLSL Version    : 4.10
+
+-------------------- OpenGL Extensions --------------------
+
+Number of supported extensions : 45
+
+GL_ARB_blend_func_extended
+GL_ARB_draw_buffers_blend
+GL_ARB_draw_indirect
+GL_ARB_ES2_compatibility
+GL_ARB_explicit_attrib_location
+GL_ARB_gpu_shader_fp64
+GL_ARB_gpu_shader5
+GL_ARB_instanced_arrays
+GL_ARB_internalformat_query
+GL_ARB_occlusion_query2
+GL_ARB_sample_shading
+GL_ARB_sampler_objects
+GL_ARB_separate_shader_objects
+GL_ARB_shader_bit_encoding
+GL_ARB_shader_subroutine
+GL_ARB_shading_language_include
+GL_ARB_tessellation_shader
+GL_ARB_texture_buffer_object_rgb32
+GL_ARB_texture_cube_map_array
+GL_ARB_texture_gather
+GL_ARB_texture_query_lod
+GL_ARB_texture_rgb10_a2ui
+GL_ARB_texture_storage
+GL_ARB_texture_swizzle
+GL_ARB_timer_query
+GL_ARB_transform_feedback2
+GL_ARB_transform_feedback3
+GL_ARB_vertex_attrib_64bit
+GL_ARB_vertex_type_2_10_10_10_rev
+GL_ARB_viewport_array
+GL_EXT_debug_label
+GL_EXT_debug_marker
+GL_EXT_framebuffer_multisample_blit_scaled
+GL_EXT_texture_compression_s3tc
+GL_EXT_texture_filter_anisotropic
+GL_EXT_texture_sRGB_decode
+GL_APPLE_client_storage
+GL_APPLE_container_object_shareable
+GL_APPLE_flush_render
+GL_APPLE_object_purgeable
+GL_APPLE_rgb_422
+GL_APPLE_row_bytes
+GL_APPLE_texture_range
+GL_ATI_texture_mirror_once
+GL_NV_texture_barrier
+-------------------------------------------------------------
+
+vertex shader was compiled without errors
+fragment shader was compiled without errors
+shader program was linked without errors
+OpenGLSphere: vertexCount = 1202
+OpenGLSphere: faceCount = 2400
+detached and deleted 2 shader objects
+deleted shader program object
+application terminated successfully

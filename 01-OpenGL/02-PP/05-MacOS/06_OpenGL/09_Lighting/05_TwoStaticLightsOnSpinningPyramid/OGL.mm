@@ -535,7 +535,7 @@ int main(int argc, char *argv[])
         "\n" \
         "layout(line_strip, max_vertices = 9) out;\n" \
         "out GS_OUT {\n" \
-        "   vec3 lightDirection;\n" \
+        "   vec3 lightDirection[2];\n" \
         "   vec3 viewDirection;\n" \
         "   vec3 normal;\n" \
         "} gs_out;\n" \
@@ -658,24 +658,25 @@ int main(int argc, char *argv[])
         "\n" \
         "void main(void)\n" \
         "{\n" \
-        "   vec4 ambient = vec4(1.0);\n" \
-        "   vec4 diffuse = vec4(0.0);\n" \
-        "   vec4 specular = vec4(0.0);\n" \
-        "   \n" \
         "   if(isLight) {\n" \
-        "       vec3 lightDirection[2] = { normalize(fs_in.lightDirection[0]), normalize(fs_in.lightDirection[1]) };\n" \
+        "       vec3 lightDirection[2];\n" \
+        "       lightDirection[0] = normalize(fs_in.lightDirection[0]);\n" \
+        "       lightDirection[1] = normalize(fs_in.lightDirection[1]);\n" \
         "       vec3 viewDirection = normalize(fs_in.viewDirection);\n" \
         "       vec3 normal = normalize(fs_in.normal);\n" \
         "       \n" \
-        "       vec3 reflectedDirection[2] = { reflect(-lightDirection[0], normal), reflect(-lightDirection[1], normal) };\n" \
+        "       vec3 reflectedDirection[2];\n" \
+        "       reflectedDirection[0] = reflect(-lightDirection[0], normal);\n" \
+        "       reflectedDirection[1] = reflect(-lightDirection[1], normal);\n" \
         "       \n" \
-        "       ambient += (light[0].ambient + light[1].ambient) * material.ambient;\n" \
+        "       vec4 ambient = (light[0].ambient + light[1].ambient) * material.ambient;\n" \
         "       \n" \
-        "       diffuse += light[0].diffuse * material.diffuse * max(dot(normal, lightDirection[0]), 0.0);\n" \
+        "       vec4 diffuse = light[0].diffuse * material.diffuse * max(dot(normal, lightDirection[0]), 0.0);\n" \
         "       diffuse += light[1].diffuse * material.diffuse * max(dot(normal, lightDirection[1]), 0.0);\n" \
         "       \n" \
-        "       /* reflect() seems to return a positive even for antiparallel reflected vector wrt normal;\n" \
+        "       /* reflect() seems to return positive even for antiparallel reflected vector wrt normal;\n" \
         "          the if-statement below is a sad fix atleast until I don't find my mistake... */\n" \
+        "       vec4 specular = vec4(0.0);\n" \
         "       if(dot(reflectedDirection[0], normal) > 0.0) {\n" \
         "           float specularFactor = pow(max(dot(viewDirection, reflectedDirection[0]), 0.0), material.shininess);\n" \
         "           specular += light[0].specular * material.specular * specularFactor;\n" \
@@ -684,8 +685,10 @@ int main(int argc, char *argv[])
         "           float specularFactor = pow(max(dot(viewDirection, reflectedDirection[1]), 0.0), material.shininess);\n" \
         "           specular += light[1].specular * material.specular * specularFactor;\n" \
         "       }\n" \
+        "       FragColor = ambient + diffuse + specular;\n" \
+        "   } else {\n" \
+        "       FragColor = vec4(1.0);\n" \
         "   }\n" \
-        "   FragColor = ambient + diffuse + specular;\n" \
         "}\n";
 #else
     const GLchar *fragmentShaderSourceCode =
@@ -733,7 +736,7 @@ int main(int argc, char *argv[])
         "       vec4 diffuse = light[0].diffuse * material.diffuse * max(dot(normal, lightDirection[0]), 0.0);\n" \
         "       diffuse += light[1].diffuse * material.diffuse * max(dot(normal, lightDirection[1]), 0.0);\n" \
         "       \n" \
-        "       /* reflect() seems to return a positive even for antiparallel reflected vector wrt normal;\n" \
+        "       /* reflect() seems to return positive even for antiparallel reflected vector wrt normal;\n" \
         "          the if-statement below is a sad fix atleast until I don't find my mistake... */\n" \
         "       vec4 specular = vec4(0.0);\n" \
         "       if(dot(reflectedDirection[0], normal) > 0.0) {\n" \
