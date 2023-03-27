@@ -1,0 +1,26 @@
+WinMain: created log file
+WndProc: window in focus
+PrintD3DInfo: CreateDXGIFactory() succeeded
+PrintD3DInfo: IDXGIFactory::EnumAdapters() for adapter at ordinal 0 succeeded
+
+--------------------- D3D11 Properties --------------------
+
+Graphics Device        : NVIDIA GeForce GTX 1650
+Dedicated Video Memory : 4 GiB
+-----------------------------------------------------------
+
+initialize: D3D11CreateDeviceAndSwapChain obtained Hardware Driver
+initialize: D3D11CreateDeviceAndSwapChain obtained Feature Level 11.0
+initialize: D3DCompile succeeded for vertex shader
+initialize: CreateVertexShader succeeded
+initialize: D3DCompile succeeded for pixel shader
+initialize: CreatePixelShader succeeded
+initialize: CreateInputLayout succeeded
+initialize: CreateBuffer for Pyramid Position Buffer succeeded
+initialize: CreateBuffer for Cube Position Buffer succeeded
+initialize: CreateBuffer for Constant Buffer succeeded
+initialize: CreateRasterizerState succeeded
+initialize: resize succeeded
+WinMain: initialize succeeded
+WndProc: destroying after receiving esc
+WndProc: window out of focus

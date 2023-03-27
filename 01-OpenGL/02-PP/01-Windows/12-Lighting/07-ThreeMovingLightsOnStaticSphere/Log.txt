@@ -5,7 +5,7 @@ window in focus
 
 OpenGL Vendor   : NVIDIA Corporation
 OpenGL Renderer : NVIDIA GeForce GTX 1650/PCIe/SSE2
-OpenGL Version  : 4.6.0 NVIDIA 516.40
+OpenGL Version  : 4.6.0 NVIDIA 517.48
 GLSL Version    : 4.60 NVIDIA
 
 -------------------- OpenGL Extensions --------------------
@@ -421,18 +421,6 @@ per-fragment: vertex shader was compiled without errors
 per-fragment: fragment shader was compiled without errors
 per-fragment: shader program was linked without errors
 created OpenGL context successfully and made it the current context
-window out of focus
-window in focus
-window out of focus
-window in focus
-fullscreen mode on
-fullscreen mode off
-window out of focus
-window in focus
-window out of focus
-window in focus
-window out of focus
-window in focus
 fullscreen mode on
 fullscreen mode off
 destroying after receiving 'Q'
