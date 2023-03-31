@@ -20,7 +20,7 @@
 #pragma comment(lib, "d3dcompiler.lib")
 
 // linking DirectX Tool Kit
-#pragma comment(lib, "../../Bin/Lib/Debug/x64/DirectXTK.lib")
+#pragma comment(lib, "../../Bin/DXTK/Debug/x64/DirectXTK.lib")
 
 // macros
 #define WIN_WIDTH 800
@@ -80,9 +80,6 @@ XMMATRIX PerspectiveProjectionMatrix;
 
 // animation
 FLOAT theta;
-
-// for WIC* functions
-using namespace DirectX;
 
 // entry-point function
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int iCmdShow)
@@ -485,8 +482,10 @@ HRESULT initialize(void)
 		"Vertex main(float4 position: POSITION, float2 texCoord: TEXCOORD)\n" \
 		"{\n" \
 		"	Vertex output;\n" \
+		"	const float2x2 TEXCOORD_ADJUST = float2x2(float2(-1.0f, 0.0f), float2(0.0f, 1.0f));\n" \
+		"	\n" \
 		"	output.position = mul(worldViewProjectionMatrix, position);\n" \
-		"	output.texCoord = texCoord;\n" \
+		"	output.texCoord = mul(TEXCOORD_ADJUST, texCoord);\n" \
 		"	return output;\n" \
 		"}\n";
 
@@ -945,9 +944,10 @@ HRESULT initialize(void)
 	// create texture sampler state
 	D3D11_SAMPLER_DESC d3d11SamplerDescriptor;
 	ZeroMemory((void *)&d3d11SamplerDescriptor, sizeof(d3d11SamplerDescriptor));
-	d3d11SamplerDescriptor.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	d3d11SamplerDescriptor.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	d3d11SamplerDescriptor.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	d3d11SamplerDescriptor.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	d3d11SamplerDescriptor.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 
 	hr = gpID3D11Device->CreateSamplerState(&d3d11SamplerDescriptor, &gpID3D11SamplerState_Texture);
 	if (FAILED(hr))
@@ -1225,7 +1225,7 @@ void display(void)
 		XMMatrixRotationZ(XMConvertToRadians(theta)) *
 		XMMatrixRotationY(XMConvertToRadians(theta)) *
 		XMMatrixRotationX(XMConvertToRadians(-theta)) *
-		XMMatrixTranslation(0.0f, 0.0f, 4.0f);
+		XMMatrixTranslation(0.0f, 0.0f, 5.0f);
 	XMMATRIX viewMatrix = XMMatrixIdentity();
 	XMMATRIX wvpMatrix = worldMatrix * viewMatrix * PerspectiveProjectionMatrix;
 
@@ -1353,7 +1353,7 @@ HRESULT LoadD3DTexture(const wchar_t *szTexFilename, ID3D11ShaderResourceView **
 	HRESULT hr = S_OK;
 
 	// code
-	hr = CreateWICTextureFromFile(
+	hr = DirectX::CreateWICTextureFromFile(
 		gpID3D11Device,
 		gpID3D11DeviceContext,
 		szTexFilename,

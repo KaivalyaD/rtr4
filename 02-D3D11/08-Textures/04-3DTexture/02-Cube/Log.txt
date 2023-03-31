@@ -1,4 +1,4 @@
-WinMain: created log file
+WinMain: CoInitialize succeeded
 WndProc: window in focus
 PrintD3DInfo: CreateDXGIFactory() succeeded
 PrintD3DInfo: IDXGIFactory::EnumAdapters() for adapter at ordinal 0 succeeded
@@ -17,9 +17,11 @@ initialize: D3DCompile succeeded for pixel shader
 initialize: CreatePixelShader succeeded
 initialize: CreateInputLayout succeeded
 initialize: CreateBuffer for Position Buffer succeeded
-initialize: CreateBuffer for Color Buffer succeeded
+initialize: CreateBuffer for TexCoord Buffer succeeded
 initialize: CreateBuffer for Constant Buffer succeeded
 initialize: CreateRasterizerState succeeded
+initialize: LoadD3DTexture succeeded for Vijay_Kundali.bmp
+initialize: CreateSamplerState succeeded
 initialize: resize succeeded
 WinMain: initialize succeeded
 WndProc: destroying after receiving esc
